@@ -684,131 +684,131 @@ if funcion=="Programación Rellenos":
     uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
     if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
-        st.write(df)
+        #st.write(df)
 
-    data_area = df.groupby('ÁREA')['TOTAL (M3)'].sum()
-    st.markdown("**Total M3 por Área**")
+        data_area = df.groupby('ÁREA')['TOTAL (M3)'].sum()
+        st.markdown("**Total M3 por Área**")
 
-    # Creamos una lista de diccionarios para la opción de datos en la serie
-    data_list_area = [{"value": v, "name": n} for n, v in data_area.items()]
-    import pandas as pd
-    import streamlit as st
-    from streamlit_echarts import st_echarts
-    # Calcular la suma total de los valores en data_list_area
-    total = sum(item['value'] for item in data_list_area)
+        # Creamos una lista de diccionarios para la opción de datos en la serie
+        data_list_area = [{"value": v, "name": n} for n, v in data_area.items()]
+        import pandas as pd
+        import streamlit as st
+        from streamlit_echarts import st_echarts
+        # Calcular la suma total de los valores en data_list_area
+        total = sum(item['value'] for item in data_list_area)
 
-    print(f"La suma total de los valores en data_list_area es {total}")
+        print(f"La suma total de los valores en data_list_area es {total}")
 
-    # Calcular el total
-    #total = df['TOTAL (M3)'].sum()
-    #total =data_area[data_area.columns[0]].sum()
+        # Calcular el total
+        #total = df['TOTAL (M3)'].sum()
+        #total =data_area[data_area.columns[0]].sum()
 
-    # Definir los colores de viridis
-    viridis = ["#440154", "#481567", "#482677", "#453781", "#404788", "#39568C", "#33638D", "#2D708E", "#287D8E", "#238A8D", "#1F968B", "#20A387", "#29AF7F", "#3CBB75", "#55C667", "#73D055", "#95D840", "#B8DE29", "#DCE319", "#FDE725"]
+        # Definir los colores de viridis
+        viridis = ["#440154", "#481567", "#482677", "#453781", "#404788", "#39568C", "#33638D", "#2D708E", "#287D8E", "#238A8D", "#1F968B", "#20A387", "#29AF7F", "#3CBB75", "#55C667", "#73D055", "#95D840", "#B8DE29", "#DCE319", "#FDE725"]
 
-    # Asignar un color único a cada área
-    for i, item in enumerate(data_list_area):
-        item['itemStyle'] = {"color": viridis[i % len(viridis)]}
+        # Asignar un color único a cada área
+        for i, item in enumerate(data_list_area):
+            item['itemStyle'] = {"color": viridis[i % len(viridis)]}
 
-    # Ordenar data_list_area en orden descendente según el valor
-    data_list_area.sort(key=lambda x: x['value'], reverse=True)
+        # Ordenar data_list_area en orden descendente según el valor
+        data_list_area.sort(key=lambda x: x['value'], reverse=True)
 
-    options = {
-        "tooltip": {"trigger": "item"},
-        "legend": {"show": False},
-        "series": [
-            {
-                "name": "ÁREA",
-                "type": "pie",
-                "radius": ["40%", "70%"],
-                "avoidLabelOverlap": False,
-                "itemStyle": {
-                    "borderRadius": 10,
-                    "borderColor": "#fff",
-                    "borderWidth": 2,
+        options = {
+            "tooltip": {"trigger": "item"},
+            "legend": {"show": False},
+            "series": [
+                {
+                    "name": "ÁREA",
+                    "type": "pie",
+                    "radius": ["40%", "70%"],
+                    "avoidLabelOverlap": False,
+                    "itemStyle": {
+                        "borderRadius": 10,
+                        "borderColor": "#fff",
+                        "borderWidth": 2,
+                    },
+                    "label": {
+                        "show": True,
+                        "position": "outside",
+                        "formatter": "{b}: {c} ({d}%)"
+                    },
+                    "emphasis": {
+                        "label": {"show": True, "fontSize": "20", "fontWeight": "bold"}
+                    },
+                    "labelLine": {"show": True},
+                    "data": data_list_area,
                 },
-                "label": {
-                    "show": True,
-                    "position": "outside",
-                    "formatter": "{b}: {c} ({d}%)"
-                },
-                "emphasis": {
-                    "label": {"show": True, "fontSize": "20", "fontWeight": "bold"}
-                },
-                "labelLine": {"show": True},
-                "data": data_list_area,
-            },
-            {
-                "name": 'Total',
-                "type": 'gauge',
-                "startAngle": 90,
-                "endAngle": -269.9999,
-                "radius": '50%',
-                "pointer": {"show": False},
-                "detail": {"show": True, "fontSize": 20, "offsetCenter": [0, '40%']},
-                "data": [{'value': total, 'name': 'Total M3'}],
-                "title": {"show": False},
-                "axisLine": {"show": False},
-                "splitLine": {"show": False},
-                "axisTick": {"show": False},
-                "axisLabel": {"show": False},
-                "anchor": {"show": False}
-            }
-        ],
-    }
+                {
+                    "name": 'Total',
+                    "type": 'gauge',
+                    "startAngle": 90,
+                    "endAngle": -269.9999,
+                    "radius": '50%',
+                    "pointer": {"show": False},
+                    "detail": {"show": True, "fontSize": 20, "offsetCenter": [0, '40%']},
+                    "data": [{'value': total, 'name': 'Total M3'}],
+                    "title": {"show": False},
+                    "axisLine": {"show": False},
+                    "splitLine": {"show": False},
+                    "axisTick": {"show": False},
+                    "axisLabel": {"show": False},
+                    "anchor": {"show": False}
+                }
+            ],
+        }
 
 
 
-    st_echarts(options=options, height="400px")
+        st_echarts(options=options, height="400px")
 
-    st.write(data_area)
+        st.write(data_area)
 
 
 
 
-    # Acceder a los nombres de las columnas del 15 al 42
-    columnas = df.columns[21:49]  # Python usa indexación basada en 0, por lo que debes restar 1 a los índices
+        # Acceder a los nombres de las columnas del 15 al 42
+        columnas = df.columns[21:49]  # Python usa indexación basada en 0, por lo que debes restar 1 a los índices
 
-    # Lista de columnas de fechas 
-    fechas=columnas
+        # Lista de columnas de fechas 
+        fechas=columnas
 
-    # Crear un nuevo dataframe con las columnas requeridas
-    new_df = pd.melt(df, id_vars=['ÁREA'], value_vars=fechas, var_name='Fecha', value_name='Metros Cúbicos')
+        # Crear un nuevo dataframe con las columnas requeridas
+        new_df = pd.melt(df, id_vars=['ÁREA'], value_vars=fechas, var_name='Fecha', value_name='Metros Cúbicos')
 
-    # Convertir la columna 'Fecha' a formato de texto y extraer el mes y el año
-    new_df['Fecha'] = pd.to_datetime(new_df['Fecha']).dt.strftime('%Y-%m')
+        # Convertir la columna 'Fecha' a formato de texto y extraer el mes y el año
+        new_df['Fecha'] = pd.to_datetime(new_df['Fecha']).dt.strftime('%Y-%m')
 
-    # Calcular la Metros Cúbicos para cada 'ÁREA' y 'Fecha'
-    new_df = new_df.groupby(['ÁREA', 'Fecha'])['Metros Cúbicos'].sum().reset_index()
+        # Calcular la Metros Cúbicos para cada 'ÁREA' y 'Fecha'
+        new_df = new_df.groupby(['ÁREA', 'Fecha'])['Metros Cúbicos'].sum().reset_index()
 
-    # Calcular el total para cada 'Fecha'
-    total_df = new_df.groupby('Fecha')['Metros Cúbicos'].sum().reset_index()
-    total_df.columns = ['Fecha', 'Total']
+        # Calcular el total para cada 'Fecha'
+        total_df = new_df.groupby('Fecha')['Metros Cúbicos'].sum().reset_index()
+        total_df.columns = ['Fecha', 'Total']
 
-    # Unir el dataframe original con los totales
-    new_df = pd.merge(new_df, total_df, on='Fecha')
+        # Unir el dataframe original con los totales
+        new_df = pd.merge(new_df, total_df, on='Fecha')
 
-    # Crear el gráfico de barras apiladas
-    chart = alt.Chart(new_df).mark_bar().encode(
-        x='Fecha:N',
-        y='Metros Cúbicos:Q',
-        color=alt.Color('ÁREA:N', scale=alt.Scale(scheme='viridis')),
-        tooltip=[
-            'Fecha:N', 
-            alt.Tooltip('ÁREA:N'),
-            alt.Tooltip('Metros Cúbicos:Q', format=',d'),
-            alt.Tooltip('Total:Q', format=',d')
-        ],
-        order=alt.Order(
-        'Fecha:N',
-        sort='ascending'
+        # Crear el gráfico de barras apiladas
+        chart = alt.Chart(new_df).mark_bar().encode(
+            x='Fecha:N',
+            y='Metros Cúbicos:Q',
+            color=alt.Color('ÁREA:N', scale=alt.Scale(scheme='viridis')),
+            tooltip=[
+                'Fecha:N', 
+                alt.Tooltip('ÁREA:N'),
+                alt.Tooltip('Metros Cúbicos:Q', format=',d'),
+                alt.Tooltip('Total:Q', format=',d')
+            ],
+            order=alt.Order(
+            'Fecha:N',
+            sort='ascending'
+            )
+        ).properties(
+            width=800,
+            height=500
         )
-    ).properties(
-        width=800,
-        height=500
-    )
 
-    chart
+        chart
 
 
 
