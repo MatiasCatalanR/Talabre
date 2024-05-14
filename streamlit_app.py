@@ -857,7 +857,7 @@ if funcion== "MDG 2024":
         # Redondea los valores al entero más cercano y luego los convierte a enteros
         new_df['Total VP'] = new_df['Total VP'].round().astype(int)
 
-        st.write("100% Cumplimiento",str(int(new_df['Metros Cúbicos VP'].sum())))
+        st.write("100% Cumplimiento",int(new_df['Metros Cúbicos VP'].sum())))
         st.write("Real Requerido VP",str(round(exigido_vp_acc,2))+"%")
 
         # Crear el gráfico de barras apiladas
