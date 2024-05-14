@@ -1,0 +1,13 @@
+altair==5.3.0
+matplotlib==3.8.4
+numpy==1.26.4
+openpyxl==3.1.2
+pandas==2.2.2
+Pillow==10.3.0
+pyecharts==2.0.5
+pygal==3.0.4
+Requests==2.31.0
+st_circular_progress==0.3.9
+streamlit==1.33.0
+streamlit_echarts==0.4.0
+streamlit_extras==0.4.2
