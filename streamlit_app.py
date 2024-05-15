@@ -119,11 +119,11 @@ if funcion=="Reporte Inicio-Término Turno":
         km_recorridos = df['distancia_recorrida__km_'].sum()
         camiones_totales=df['patente'].nunique()
         col5,col6,col7=st.columns(3)
-        col5.metric(label="Carga Total m³",value=m3_transportados)
+        col5.metric(label="m³ Transportados",value=m3_transportados)
 
         col6.metric(label="Total Ciclos",value=total_ciclos)
-        col7.metric(label="Camiones Registrados",value=camiones_totales)
-        st.metric(label="Km Totales",value=int(km_recorridos))
+        col7.metric(label="Camiones Operativos",value=camiones_totales)
+        #st.metric(label="Km Totales",value=int(km_recorridos))
         style_metric_cards()
 
         col8,col9=st.columns(2)
@@ -225,7 +225,8 @@ if funcion=="Reporte Inicio-Término Turno":
 
         # Rellenar los valores NaN restantes (es decir, los que están al principio de cada grupo de 'lugar_descarga') con 0
         df_all['count_acumulado'].fillna(0, inplace=True)
-        st.write(df_all)
+        
+        #st.write(df_all)
 
         # Crear el gráfico de área apilada
         options = {
@@ -269,11 +270,12 @@ if funcion=="Reporte Inicio-Término Turno":
         m3_km_transportado=int(m3_transportados)/int(km_recorridos)
         df['kph_mean']=df['kph_mean'].str.replace(',', '.').astype(float)
         df['kph_mean'] = pd.to_numeric(df['kph_mean'])
-        df_velocidad = df[df['kph_mean'] > 13]
+        df_velocidad = df[df['kph_mean'] > 15]
+
         #st.write(df_velocidad)
         velocidad_promedio=round(df_velocidad['kph_mean'].mean(),2)
         #st.write(velocidad_promedio)
-        option = {
+        option_v = {
             "tooltip": {
                 "formatter": '{a} <br/>{b} : {c}%'
             },
@@ -324,7 +326,7 @@ if funcion=="Reporte Inicio-Término Turno":
             }]
         }
 
-        st_echarts(options=option, key="1")
+        st_echarts(options=option_v)
 
         # Suponiendo que 'df' es tu DataFrame y que las columnas relevantes son 'fecha', 'patente', 'inicio_ciclo' y 'fin_carga'
 
@@ -698,15 +700,53 @@ if funcion=="Programación Rellenos":
         #total =data_area[data_area.columns[0]].sum()
 
         # Definir los colores de viridis
-        viridis = ["#440154", "#481567", "#482677", "#453781", "#404788", "#39568C", "#33638D", "#2D708E", "#287D8E", "#238A8D", "#1F968B", "#20A387", "#29AF7F", "#3CBB75", "#55C667", "#73D055", "#95D840", "#B8DE29", "#DCE319", "#FDE725"]
+        colormap = [
+            "#14C8E6", # C 20 M 79 Y 90 K 10
+            "#FF6B02", # C 0 M 42 Y 98 K 0
+            "#FF165A", # C 0 M 75 Y 89 K 0
+            "#00A1C9", # C 80 M 15 Y 30 K 0
+            "#BA4A28", # R 186 G 74 B 40
+            "#F8A302", # R 248 G 163 B 2
+            "#F15A56", # R 241 G 90 B 86
+            "#009EB0", # R 0 G 158 B 176
+            "#3D4552", # C 78 M 61 Y 46 K 38
+            "#7B1E20", # C 43 M 99 Y 90 K 31
+            "#C7B299", # C 22 M 27 Y 39 K 6
+            "#004E52", # C 87 M 35 Y 46 K 52
+            "#1D71B8", # C 85 M 50 Y 0 K 0
+            "#764A4A", # C 50 M 70 Y 60 K 31
+            "#BB5726", # bb5726
+            "#F4A700", # f4a700
+            "#E96C28", # e96c28
+            "#209EB0", # 209eb0
+            "#76151F", # 76151f
+            "#374752", # 374752
+            "#C8B499", # c8b499
+            "#004C4E", # 004c4e
+            "#6E4D48"  # 6e4d48
+        ]
+
+        import matplotlib.pyplot as plt
+        import matplotlib.colors
+        import numpy as np
+
+        # Genera una paleta de colores "cividis" para 19 colores
+        colormap = plt.cm.cividis(np.linspace(0, 1, 19))
+
+        # Convierte los colores a formato hexadecimal
+        colormap = [matplotlib.colors.rgb2hex(color) for color in colormap]
+
+        print(colormap)
+
+
 
         # Asignar un color único a cada área
         for i, item in enumerate(data_list_area):
-            item['itemStyle'] = {"color": viridis[i % len(viridis)]}
+            item['itemStyle'] = {"color": colormap[i % len(colormap)]}
 
         # Ordenar data_list_area en orden descendente según el valor
         data_list_area.sort(key=lambda x: x['value'], reverse=True)
-
+        
         options = {
             "tooltip": {"trigger": "item"},
             "legend": {"show": False},
@@ -749,6 +789,7 @@ if funcion=="Programación Rellenos":
                     "anchor": {"show": False}
                 }
             ],
+            
         }
 
 
@@ -781,12 +822,18 @@ if funcion=="Programación Rellenos":
 
         # Unir el dataframe original con los totales
         new_df = pd.merge(new_df, total_df, on='Fecha')
+        
+        # Ordena el DataFrame por 'Metros Cúbicos VP' en orden descendente
+        new_df = new_df.sort_values('ÁREA')
 
-        # Crear el gráfico de barras apiladas
+        # Crea un diccionario que mapea cada 'ÁREA' a un color
+        color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
+
+        # Crea el gráfico de barras apiladas
         chart = alt.Chart(new_df).mark_bar().encode(
             x='Fecha:N',
             y='Metros Cúbicos:Q',
-            color=alt.Color('ÁREA:N', scale=alt.Scale(scheme='viridis')),
+            color=alt.Color('ÁREA:N', scale=alt.Scale(scheme="cividis")),
             tooltip=[
                 'Fecha:N', 
                 alt.Tooltip('ÁREA:N'),
@@ -801,7 +848,6 @@ if funcion=="Programación Rellenos":
             width=800,
             height=500
         )
-
         chart
     else:
         st.markdown("Por favor Carga la Programación de Rellenos")
@@ -859,12 +905,43 @@ if funcion== "MDG 2024":
 
         st.write("100% Cumplimiento",int(new_df['Metros Cúbicos VP'].sum()))
         st.write("Real Requerido VP",str(round(exigido_vp_acc,2))+"%")
+        colormap = [
+            "#14C8E6", # C 20 M 79 Y 90 K 10
+            "#FF6B02", # C 0 M 42 Y 98 K 0
+            "#FF165A", # C 0 M 75 Y 89 K 0
+            "#00A1C9", # C 80 M 15 Y 30 K 0
+            "#BA4A28", # R 186 G 74 B 40
+            "#F8A302", # R 248 G 163 B 2
+            "#F15A56", # R 241 G 90 B 86
+            "#009EB0", # R 0 G 158 B 176
+            "#3D4552", # C 78 M 61 Y 46 K 38
+            "#7B1E20", # C 43 M 99 Y 90 K 31
+            "#C7B299", # C 22 M 27 Y 39 K 6
+            "#004E52", # C 87 M 35 Y 46 K 52
+            "#1D71B8", # C 85 M 50 Y 0 K 0
+            "#764A4A", # C 50 M 70 Y 60 K 31
+            "#BB5726", # bb5726
+            "#F4A700", # f4a700
+            "#E96C28", # e96c28
+            "#209EB0", # 209eb0
+            "#76151F", # 76151f
+            "#374752", # 374752
+            "#C8B499", # c8b499
+            "#004C4E", # 004c4e
+            "#6E4D48"  # 6e4d48
+        ]
+        
+        # Ordena el DataFrame por 'Metros Cúbicos VP' en orden descendente
+        new_df = new_df.sort_values('ÁREA')
 
-        # Crear el gráfico de barras apiladas
+        # Crea un diccionario que mapea cada 'ÁREA' a un color
+        color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
+
+        # Crea el gráfico de barras apiladas
         chart = alt.Chart(new_df).mark_bar().encode(
             x='Fecha:N',
             y='Metros Cúbicos VP:Q',
-            color=alt.Color('ÁREA:N', scale=alt.Scale(scheme='viridis')),
+            color=alt.Color('ÁREA:N', scale=alt.Scale(domain=list(color_dict.keys()), range=list(color_dict.values()))),
             tooltip=[
                 'Fecha:N', 
                 alt.Tooltip('ÁREA:N'),
@@ -879,6 +956,8 @@ if funcion== "MDG 2024":
             width=800,
             height=500
         )
+
+
 
  
 
@@ -899,11 +978,10 @@ if funcion== "MDG 2024":
         print(f"La suma total de los valores en data_list_area es {total}")
 
         # Definir los colores de viridis
-        viridis = ["#440154", "#481567", "#482677", "#453781", "#404788", "#39568C", "#33638D", "#2D708E", "#287D8E", "#238A8D", "#1F968B", "#20A387", "#29AF7F", "#3CBB75", "#55C667", "#73D055", "#95D840", "#B8DE29", "#DCE319", "#FDE725"]
 
         # Asignar un color único a cada área
         for i, item in enumerate(data_list_area):
-            item['itemStyle'] = {"color": viridis[i % len(viridis)]}
+            item['itemStyle'] = {"color": colormap[i % len(colormap)]}
 
         # Ordenar data_list_area en orden descendente según el valor
         data_list_area.sort(key=lambda x: x['value'], reverse=True)
