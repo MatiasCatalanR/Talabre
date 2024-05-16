@@ -148,10 +148,10 @@ if funcion=="Reporte Inicio-Término Turno":
         km_recorridos = df['distancia_recorrida__km_'].sum()
         camiones_totales=df['patente'].nunique()
         col5,col6,col7=st.columns(3)
-        col5.metric(label="m³ Transportados",value=m3_transportados)
-
+        col5.metric(label="m³ Transportados",value=total_ciclos*20)
         col6.metric(label="Total Ciclos",value=total_ciclos)
         col7.metric(label="Camiones Operativos",value=camiones_totales)
+        st.metric(label="m³ Geométricos",value=int((total_ciclos*20)/1.42))
         #st.metric(label="Km Totales",value=int(km_recorridos))
         style_metric_cards()
 
