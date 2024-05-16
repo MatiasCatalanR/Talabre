@@ -73,13 +73,42 @@ url_despacho='https://icons8.com/icon/21183/in-transit'
 if funcion=="Reporte Inicio-Término Turno":
     st.title('📊 Análisis de Relleno al Inicio y Término del Turno Diurno')
     # Obtener la fecha seleccionada por el usuario
-    selected_date = st.sidebar.date_input("Seleccione una fecha")
+    #selected_date = st.sidebar.date_input("Seleccione una fecha")
+
+    dias_a_restar = 10
+
+    import datetime
+    import streamlit as st
+
+    import datetime
+    import streamlit as st
+
+    # Obtén la fecha de hoy y la fecha de hace 7 días
+    hoy = datetime.date.today()
+    hace_siete_dias = hoy - datetime.timedelta(days=9)
+
+    # Crea el selector de fechas con el rango predeterminado
+    d = st.sidebar.date_input(
+        "Seleccione una Fecha",
+        (hace_siete_dias, hoy),
+        format="MM.DD.YYYY",
+    )
 
 
-    # URL de la API
-    url = "https://api.terrestra.tech/cycles?start_date="+str(selected_date) +" 08:00:00&end_date="+str(selected_date)+" 20:00:00"
-    url2 ="https://api.terrestra.tech/horometers?start_date="+str(selected_date)+" 08:00:00&end_date="+str(selected_date)+" 20:00:00"
 
+    # Restar días
+    #nueva_fecha = selected_date - timedelta(days=dias_a_restar)
+    #st.write(nueva_fecha)
+    
+    if len(d)==2:
+        st.subheader("Este análisis contempla el estudio desde el "+str(d[0])+" hasta el "+str(d[1])) 
+
+        # URL de la API
+        url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(d[1])+" 20:00:00"
+        url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(d[0])+" 20:00:00"
+    else:
+        url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(d[0])+" 20:00:00"
+        url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(d[0])+" 20:00:00"
     # Credenciales para la autenticación básica
     username = "talabre"
     password = "cosmos_talabre_2024"
@@ -433,8 +462,14 @@ if funcion=="Reporte Inicio-Término Turno":
         inicio_carga_df = pd.DataFrame(inicio_carguio)
 
         fin_carga_df = pd.DataFrame(fin_carga)
+        # Elimina las filas donde alguna columna es None
+        turno_diurno_df = turno_diurno_df.dropna()
+
+
 
         # Convertir 'inicio_turno' a segundos
+        #st.write(turno_diurno_df)
+        
         turno_diurno_df['inicio_turno_segundos'] = turno_diurno_df['inicio_turno'].apply(lambda x: x.hour * 3600 + x.minute * 60 + x.second)
 
         # Calcular el promedio, mínimo y máximo
@@ -623,7 +658,109 @@ if funcion=="Reporte Inicio-Término Turno":
         )
 
         chart
+###pruebaas inicio turno
+        combined_df2 = pd.concat([turno_diurno_df,inicio_carga_df], ignore_index=True)
+        combined_df2 = combined_df2.dropna(subset=['hora'])
 
+        # Convertir la columna 'hora' a formato de cadena de texto si no está en ese formato
+        combined_df2['hora'] = combined_df2['hora'].astype(str)
+
+        # Crear una nueva columna 'hora_formateada' para las horas
+        combined_df2['hora_formateada'] = combined_df2['hora'].str[-8:]
+        #st.write(combined_df)
+        # Convertir la columna 'hora_formateada' a formato datetime
+        combined_df2['hora_formateada'] = pd.to_datetime(combined_df2['hora_formateada'], format='%H:%M:%S')
+
+        # Crear una máscara para filtrar las horas menores a las 12:00:00
+        mask = (combined_df2['hora_formateada'].dt.hour < 12)
+
+        # Aplicar la máscara al DataFrame
+        filtered_df = combined_df2[mask]
+        filtered_df
+
+        # Graficar con Altair
+        chart = alt.Chart(filtered_df).mark_point().encode(
+            x=alt.X('Patente:N', title='Patente'),
+            y=alt.Y('hora:O', title='Hora'),
+            color=alt.Color('Origen:N', title='Origen')
+        ).properties(
+            title=alt.TitleParams(
+                text='Primeros registros del turno por Origen'),
+            height=400
+        ).configure_axis(
+            labelFontSize=12,
+            titleFontSize=14
+        ).configure_legend(
+            titleFontSize=14,
+            labelFontSize=12
+        )
+
+        # Invertir el orden de los valores en el eje y
+        chart = chart.encode(
+            y=alt.Y('hora:O', title='Hora', scale=alt.Scale(reverse=True))
+        )
+
+        chart
+
+        import streamlit as st
+        import plotly.express as px
+        import pandas as pd
+
+        # Asegúrate de que la columna 'hora' esté en formato de tiempo correcto
+        filtered_df['hora'] = pd.to_datetime(filtered_df['hora'], format='%H:%M:%S')
+
+        # Convierte las horas a números (total de segundos desde la medianoche)
+        filtered_df['hora_numerica'] = filtered_df['hora'].dt.hour * 3600 + filtered_df['hora'].dt.minute * 60 + filtered_df['hora'].dt.second
+
+        # Ordena el DataFrame por la columna 'hora' para asegurar la secuencia correcta
+        filtered_df = filtered_df.sort_values('hora')
+
+        # Crea el gráfico de puntos con Plotly
+        fig = px.scatter(filtered_df, x='Patente', y='hora_numerica', color='Origen',
+                        labels={'hora_numerica': 'Hora del día'},
+                        category_orders={"hora_numerica": sorted(filtered_df['hora_numerica'].unique())})
+
+        # Actualiza el formato del eje y para mostrar solo horas enteras y lo invierte
+        fig.update_yaxes(tickvals=list(range(0, 24*3600, 3600)), ticktext=[f'{h}:00:00' for h in range(24)])
+
+        # Muestra el gráfico en Streamlit
+        st.plotly_chart(fig)
+
+        # Crear los dataframes basados en el valor de la columna "Origen"
+        df_analisis_iniciot = filtered_df.loc[filtered_df['Origen'] == 'Inicio Turno', ['fecha', 'Patente', 'hora']]
+        df_analisis_carga = filtered_df.loc[filtered_df['Origen'] == 'Inicio Carga', ['fecha', 'Patente', 'hora']]
+
+
+        # Convertir la columna 'hora' a formato datetime
+        df_analisis_iniciot['hora'] = pd.to_datetime(df_analisis_iniciot['hora'])
+        df_analisis_carga['hora'] = pd.to_datetime(df_analisis_carga['hora'])
+
+        # Extraer la hora
+        df_analisis_iniciot['hora'] = df_analisis_iniciot['hora'].dt.hour
+        df_analisis_carga['hora'] = df_analisis_carga['hora'].dt.hour
+        df_analisis_carga
+        df_analisis_iniciot
+        # Crear los histogramas
+        plt.figure(figsize=(12, 6))
+
+        plt.subplot(1, 2, 1)
+        df_analisis_iniciot['hora'].hist(bins=100, edgecolor='black')
+        plt.title('Histograma de horas - Inicio Turno')
+        plt.xlabel('Hora')
+        plt.ylabel('Frecuencia')
+
+        plt.subplot(1, 2, 2)
+        df_analisis_carga['hora'].hist(bins=100, edgecolor='black')
+        plt.title('Histograma de horas - Inicio Carga')
+        plt.xlabel('Hora')
+        plt.ylabel('Frecuencia')
+
+        plt.tight_layout()
+        st.pyplot()
+
+
+
+###pruebas inicio turno 
 
     else:
         st.error("Fecha sin Datos")
@@ -849,6 +986,7 @@ if funcion=="Programación Rellenos":
             height=500
         )
         chart
+
     else:
         st.markdown("Por favor Carga la Programación de Rellenos")
 
@@ -1036,3 +1174,4 @@ if funcion== "MDG 2024":
 
         chart
         st.write(new_df)
+        
