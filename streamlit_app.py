@@ -99,7 +99,7 @@ if funcion=="Reporte Inicio-Término Turno":
     # Restar días
     #nueva_fecha = selected_date - timedelta(days=dias_a_restar)
     #st.write(nueva_fecha)
-    
+
     if len(d)==2:
         st.subheader("Este análisis contempla el estudio desde el "+str(d[0])+" hasta el "+str(d[1])) 
 
@@ -635,29 +635,7 @@ if funcion=="Reporte Inicio-Término Turno":
         combined_df['hora_formateada'] = combined_df['hora'].str[-8:]
         #st.write(combined_df)
         # Graficar con Altair
-        chart = alt.Chart(combined_df).mark_point().encode(
-            x=alt.X('Patente:N', title='Patente'),
-            y=alt.Y('hora_formateada:O', title='Hora'),
-            color=alt.Color('Origen:N', title='Origen')
-        ).properties(
-            title=alt.TitleParams(
-                                    text='Primeros registros del turno por Origen'),
 
-            height=400
-        ).configure_axis(
-            labelFontSize=12,
-            titleFontSize=14
-        ).configure_legend(
-            titleFontSize=14,
-            labelFontSize=12
-        )
-
-        # Invertir el orden de los valores en el eje y
-        chart = chart.encode(
-            y=alt.Y('hora_formateada:O', title='Hora', scale=alt.Scale(reverse=True))
-        )
-
-        chart
 ###pruebaas inicio turno
         combined_df2 = pd.concat([turno_diurno_df,inicio_carga_df], ignore_index=True)
         combined_df2 = combined_df2.dropna(subset=['hora'])
@@ -676,31 +654,10 @@ if funcion=="Reporte Inicio-Término Turno":
 
         # Aplicar la máscara al DataFrame
         filtered_df = combined_df2[mask]
-        filtered_df
+
 
         # Graficar con Altair
-        chart = alt.Chart(filtered_df).mark_point().encode(
-            x=alt.X('Patente:N', title='Patente'),
-            y=alt.Y('hora:O', title='Hora'),
-            color=alt.Color('Origen:N', title='Origen')
-        ).properties(
-            title=alt.TitleParams(
-                text='Primeros registros del turno por Origen'),
-            height=400
-        ).configure_axis(
-            labelFontSize=12,
-            titleFontSize=14
-        ).configure_legend(
-            titleFontSize=14,
-            labelFontSize=12
-        )
 
-        # Invertir el orden de los valores en el eje y
-        chart = chart.encode(
-            y=alt.Y('hora:O', title='Hora', scale=alt.Scale(reverse=True))
-        )
-
-        chart
 
         import streamlit as st
         import plotly.express as px
@@ -738,8 +695,7 @@ if funcion=="Reporte Inicio-Término Turno":
         # Extraer la hora
         df_analisis_iniciot['hora'] = df_analisis_iniciot['hora'].dt.hour
         df_analisis_carga['hora'] = df_analisis_carga['hora'].dt.hour
-        df_analisis_carga
-        df_analisis_iniciot
+
         # Crear los histogramas
         plt.figure(figsize=(12, 6))
 
@@ -756,7 +712,7 @@ if funcion=="Reporte Inicio-Término Turno":
         plt.ylabel('Frecuencia')
 
         plt.tight_layout()
-        st.pyplot()
+        #st.pyplot()
 
 
 
