@@ -102,13 +102,17 @@ if funcion=="Reporte Inicio-Término Turno":
 
     if len(d)==2:
         st.subheader("Este análisis contempla el estudio desde el "+str(d[0])+" hasta el "+str(d[1])) 
-
+        mañana = d[1] + datetime.timedelta(days=1)
+        st.write(mañana)
         # URL de la API
-        url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(d[1])+" 20:00:00"
+        url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(mañana)+" 08:00:00"
+        
+        #ajustar horometros en algun momento 
         url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(d[0])+" 20:00:00"
     else:
-        url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(d[0])+" 20:00:00"
-        url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(d[0])+" 20:00:00"
+        mañana = d[0] + datetime.timedelta(days=1)
+        url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(mañana)+" 08:00:00"
+        url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(mañana)+" 08:00:00"
     # Credenciales para la autenticación básica
     username = "talabre"
     password = "cosmos_talabre_2024"
