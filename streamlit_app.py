@@ -11,6 +11,7 @@ import requests
 import io
 import base64
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 from datetime import time
 from datetime import datetime, timedelta
@@ -663,9 +664,6 @@ if funcion=="Reporte Inicio-Término Turno":
         # Graficar con Altair
 
 
-        import streamlit as st
-        import plotly.express as px
-        import pandas as pd
 
         # Asegúrate de que la columna 'hora' esté en formato de tiempo correcto
         filtered_df['hora'] = pd.to_datetime(filtered_df['hora'], format='%H:%M:%S')
