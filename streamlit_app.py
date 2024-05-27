@@ -12,6 +12,7 @@ import io
 import base64
 import matplotlib.pyplot as plt
 import plotly.express as px
+import seaborn as sns
 
 from datetime import time
 from datetime import datetime, timedelta
@@ -158,14 +159,18 @@ if funcion=="Reporte Inicio-Término Turno":
         col7.metric(label="Camiones Operativos",value=camiones_totales)
         st.metric(label="m³ Geométricos",value=int((total_ciclos*20)/1.42))
         #st.metric(label="Km Totales",value=int(km_recorridos))
-        style_metric_cards()
 
+
+        # Llamar a la función style_metric_cards() antes de crear la tarjeta métrica
+        style_metric_cards()
         col8,col9=st.columns(2)
         # Agrupamos por 'lugar_descarga' y sumamos 'carga_teorica__m3_'
         data_carga = df.groupby('lugar_carga')['carga_teorica__m3_'].sum()
 
         # Creamos una lista de diccionarios para la opción de datos en la serie
         data_list_c = [{"value": v, "name": n} for n, v in data_carga.items()]
+        data_list_c = sorted(data_list_c, key=lambda x: x["value"],reverse=True)
+
 
         options = {
             "tooltip": {"trigger": "item"},
@@ -191,18 +196,22 @@ if funcion=="Reporte Inicio-Término Turno":
                     },
                     "labelLine": {"show": True},
                     "data": data_list_c,
+                    "color": ["#bb5726","#76151f","#f4a700","#e96c28","#209eb0","#374752","#c8b499","#004c4e","#6e4d48"]
                 }
             ],
         }
+
 
         with col8:
             st.markdown("**Metros Cúbicos por Origen**")
             st_echarts(options=options, height="300px")
 
+
         data_descarga = df.groupby('lugar_descarga')['carga_teorica__m3_'].sum()
 
         # Creamos una lista de diccionarios para la opción de datos en la serie
         data_list_d = [{"value": v, "name": n} for n, v in data_descarga.items()]
+        data_list_d = sorted(data_list_d, key=lambda x: x["value"],reverse=True)
 
         optionsd = {
             "tooltip": {"trigger": "item"},
@@ -228,9 +237,11 @@ if funcion=="Reporte Inicio-Término Turno":
                     },
                     "labelLine": {"show": True},
                     "data": data_list_d,
+                    "color": ["#374752","#c8b499","#004c4e","#6e4d48","#bb5726","#76151f","#f4a700","#e96c28","#209eb0"]
                 }
             ],
         }
+
         with col9:
             st.markdown("**Metros Cúbicos por Destino**")
             st_echarts(options=optionsd, height="300px")
@@ -259,7 +270,7 @@ if funcion=="Reporte Inicio-Término Turno":
 
         # Rellenar los valores NaN restantes (es decir, los que están al principio de cada grupo de 'lugar_descarga') con 0
         df_all['count_acumulado'].fillna(0, inplace=True)
-        
+        df_all.sort_values('fin_descarga')
         #st.write(df_all)
 
         # Crear el gráfico de área apilada
@@ -301,6 +312,7 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
 
+
         m3_km_transportado=int(m3_transportados)/int(km_recorridos)
         df['kph_mean']=df['kph_mean'].str.replace(',', '.').astype(float)
         df['kph_mean'] = pd.to_numeric(df['kph_mean'])
@@ -323,8 +335,9 @@ if funcion=="Reporte Inicio-Término Turno":
                 },
                 "radius":'100%', 
                 "itemStyle": {
-                    "color": '#58D9F9',
-                    "shadowColor": 'rgba(0,138,255,0.45)',
+                    "color": '#76151f',
+                    "shadowColor": 'rgba(128,128,128,0.45)',
+
                     "shadowBlur": 10,
                     "shadowOffsetX": 2,
                     "shadowOffsetY": 2,
@@ -343,7 +356,7 @@ if funcion=="Reporte Inicio-Término Turno":
                 "detail": {
                     "valueAnimation": "true",
                     "formatter": '{value}',
-                    "backgroundColor": '#58D9F9',
+                    "backgroundColor": '#c8b499',
                     "borderColor": '#999',
                     "borderWidth": 4,
                     "width": '60%',
@@ -436,13 +449,13 @@ if funcion=="Reporte Inicio-Término Turno":
 
         df_carguio = df.dropna(subset=['entrada_carguio'])
         df_inicio_carga = df.dropna(subset=['inicio_carga'])
-
-        for (fecha, patente), group in df_carguio.groupby(['fecha', 'patente']):
+        #st.write(df_carguio)
+        for (fecha, patente,tiempo_carga), group in df_carguio.groupby(['fecha', 'patente','tiempo_carga__min_']):
             # Turno diurno
             entrada_carguio_diurno = group.loc[(group['entrada_carguio'].dt.time >= inicio_diurno_time) & (group['entrada_carguio'].dt.time < fin_diurno_time), 'entrada_carguio'].min()
             
             # Añadir los resultados a la lista correspondiente
-            turno_carguio.append({'fecha': fecha, 'patente': patente, 'entrada_carguio': entrada_carguio_diurno})
+            turno_carguio.append({'fecha': fecha, 'patente': patente, 'entrada_carguio': entrada_carguio_diurno, 'tiempo_carga':tiempo_carga})
         for (fecha, patente), group in df_inicio_carga.groupby(['fecha', 'patente']):
             # Turno diurno
             inicio_carga_diurno = group.loc[(group['inicio_carga'].dt.time >= inicio_diurno_time) & (group['inicio_carga'].dt.time < fin_diurno_time), 'inicio_carga'].min()
@@ -544,7 +557,7 @@ if funcion=="Reporte Inicio-Término Turno":
             st.markdown(f'<div style="color: green; font-size: medium; padding: 10px; background-color: lightgreen; border-radius: 10px;">Primer Camión: {minimo}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="color: red; font-size: medium; padding: 10px; background-color: lightcoral; border-radius: 10px;">Último Camión: {maximo}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="color: orange; font-size: medium; padding: 10px; background-color: lightyellow; border-radius: 10px;">Desviación Estándar: {dsv}</div>', unsafe_allow_html=True)
-            entrada_carga_df=entrada_carguio_df[['fecha','patente','entrada_carguio']].copy()
+            entrada_carga_df=entrada_carguio_df[['fecha','patente','entrada_carguio','tiempo_carga']].copy()
             st.write(entrada_carga_df)
             #iniciocarga
         inicio_carga_df['inicio_turno_segundos_carguio'] = inicio_carga_df['inicio_carga'].apply(lambda x: x.hour * 3600 + x.minute * 60 + x.second)
@@ -665,11 +678,15 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
 
+
         # Asegúrate de que la columna 'hora' esté en formato de tiempo correcto
         filtered_df['hora'] = pd.to_datetime(filtered_df['hora'], format='%H:%M:%S')
 
         # Convierte las horas a números (total de segundos desde la medianoche)
         filtered_df['hora_numerica'] = filtered_df['hora'].dt.hour * 3600 + filtered_df['hora'].dt.minute * 60 + filtered_df['hora'].dt.second
+
+        # Agrega una columna con la hora en formato de cadena
+        filtered_df['Hora'] = filtered_df['hora'].dt.strftime('%H:%M:%S')
 
         # Ordena el DataFrame por la columna 'hora' para asegurar la secuencia correcta
         filtered_df = filtered_df.sort_values('hora')
@@ -677,10 +694,13 @@ if funcion=="Reporte Inicio-Término Turno":
         # Crea el gráfico de puntos con Plotly
         fig = px.scatter(filtered_df, x='Patente', y='hora_numerica', color='Origen',
                         labels={'hora_numerica': 'Hora del día'},
-                        category_orders={"hora_numerica": sorted(filtered_df['hora_numerica'].unique())})
+                        category_orders={"hora_numerica": sorted(filtered_df['hora_numerica'].unique())},
+                        hover_data={'Hora': True, 'hora_numerica': False})
 
         # Actualiza el formato del eje y para mostrar solo horas enteras y lo invierte
         fig.update_yaxes(tickvals=list(range(0, 24*3600, 3600)), ticktext=[f'{h}:00:00' for h in range(24)])
+        # Agrega un título al gráfico
+        fig.update_layout(title='Primer Registro al Comienzo del Turno Diurno por Patente')
 
         # Muestra el gráfico en Streamlit
         st.plotly_chart(fig)
@@ -694,28 +714,81 @@ if funcion=="Reporte Inicio-Término Turno":
         df_analisis_iniciot['hora'] = pd.to_datetime(df_analisis_iniciot['hora'])
         df_analisis_carga['hora'] = pd.to_datetime(df_analisis_carga['hora'])
 
-        # Extraer la hora
-        df_analisis_iniciot['hora'] = df_analisis_iniciot['hora'].dt.hour
-        df_analisis_carga['hora'] = df_analisis_carga['hora'].dt.hour
+        df_analisis_iniciot['hora'] = df_analisis_iniciot['hora'].dt.strftime('%H:%M:%S')
+        df_analisis_carga['hora'] = df_analisis_carga['hora'].dt.strftime('%H:%M:%S')
 
-        # Crear los histogramas
+
+        # Suponiendo que 'df_analisis_iniciot' y 'df_analisis_carga' ya están definidos y contienen una columna 'hora'
+
+        # Convertir 'hora' a datetime y luego redondear al intervalo más cercano de 10 minutos
+        df_analisis_iniciot['hora'] = pd.to_datetime(df_analisis_iniciot['hora']).dt.round('10T').dt.strftime('%H:%M')
+        df_analisis_carga['hora'] = pd.to_datetime(df_analisis_carga['hora']).dt.round('10T').dt.strftime('%H:%M')
+
+        # Crear los histogramas con los datos agrupados
         plt.figure(figsize=(12, 6))
 
         plt.subplot(1, 2, 1)
-        df_analisis_iniciot['hora'].hist(bins=100, edgecolor='black')
-        plt.title('Histograma de horas - Inicio Turno')
+        df_analisis_iniciot['hora'].value_counts().sort_index().plot(kind='bar', edgecolor='black', color='#f4a700')
+        plt.title('Histograma Inicio Turno')
         plt.xlabel('Hora')
         plt.ylabel('Frecuencia')
 
         plt.subplot(1, 2, 2)
-        df_analisis_carga['hora'].hist(bins=100, edgecolor='black')
-        plt.title('Histograma de horas - Inicio Carga')
+        df_analisis_carga['hora'].value_counts().sort_index().plot(kind='bar', edgecolor='black', color='#f4a700')
+        plt.title('Histograma Inicio Carga')
         plt.xlabel('Hora')
         plt.ylabel('Frecuencia')
-
+        #df_analisis_carga
         plt.tight_layout()
-        #st.pyplot()
+        st.pyplot(plt)
+        #entrada_carguio_df
 
+        #st.write(df.head())
+
+        #st.write(df.info())
+
+
+        #st.write(df.describe())
+
+
+
+        histograma = df[['t_cola_carga', 'tiempo_carga__min_', 'transito_cargado__min_', 't_cola_descarga', 'tiempo_descarga__min_', 'transito_descargado__min_', 'tiempo_ciclo__min_', 'kph_mean', 'kph_max', 'distancia_recorrida__km_', 'tiempo_demoras_min']]
+
+        # Set Seaborn style 
+        sns.set_style("darkgrid") 
+        # Asumiendo que df es tu DataFrame original
+        df_limpieza = df.dropna()
+        #histograma=histograma.apply(lambda col:pd.to_numeric(col, errors='coerce'))
+        # Aplicar la conversión a cadenas de texto a todos los elementos del dataframe
+        histograma = histograma.apply(lambda x: x.astype(str))
+
+        # Aplicar el reemplazo de comas por puntos a todos los elementos del dataframe
+        histograma = histograma.applymap(lambda x: x.replace(',', '.'))
+
+
+        histograma = histograma.apply(lambda x: x.str.replace('%','').astype(np.float64))
+
+        st.header("Análisis exploratorio de los datos")
+
+
+
+        # Identify numerical columns 
+        numerical_columns = histograma.select_dtypes(include=["int64", "float64"]).columns 
+        # Plot distribution of each numerical feature 
+        plt.figure(figsize=(14, len(numerical_columns) * 3)) 
+        for idx, feature in enumerate(numerical_columns, 1): 
+            plt.subplot(len(numerical_columns), 2, idx) 
+            sns.histplot(histograma[feature], kde=True) 
+            plt.title(f"{feature} | Skewness: {round(histograma[feature].skew(), 2)}") 
+        
+        # Adjust layout and show plots 
+        plt.tight_layout() 
+        #plt.show() 
+        st.pyplot(plt)
+        st.markdown("**Estadística Básica**")
+        st.write(histograma.describe())
+        st.markdown("**Matriz de correlación**")
+        st.write(histograma.corr())
 
 
 ###pruebas inicio turno 
@@ -780,7 +853,7 @@ if funcion=="Programación Rellenos":
         #st.write(df)
 
         data_area = df.groupby('ÁREA')['TOTAL (M3)'].sum()
-        st.markdown("**Total M3 por Área**")
+        st.markdown("**Total m³ por Área**")
 
         # Creamos una lista de diccionarios para la opción de datos en la serie
         data_list_area = [{"value": v, "name": n} for n, v in data_area.items()]
@@ -821,7 +894,7 @@ if funcion=="Programación Rellenos":
             "#6E4D48"  # 6e4d48
         ]
 
-        import matplotlib.pyplot as plt
+
         import matplotlib.colors
         import numpy as np
 
@@ -923,7 +996,7 @@ if funcion=="Programación Rellenos":
 
         # Crea un diccionario que mapea cada 'ÁREA' a un color
         color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
-
+        st.markdown("**Metros Cúbicos Mensuales a Transportar por Área**")
         # Crea el gráfico de barras apiladas
         chart = alt.Chart(new_df).mark_bar().encode(
             x='Fecha:N',
@@ -1032,7 +1105,7 @@ if funcion== "MDG 2024":
 
         # Crea un diccionario que mapea cada 'ÁREA' a un color
         color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
-
+        st.markdown("**Total m³ requeridos por Área**")
         # Crea el gráfico de barras apiladas
         chart = alt.Chart(new_df).mark_bar().encode(
             x='Fecha:N',
@@ -1128,7 +1201,8 @@ if funcion== "MDG 2024":
 
         st_echarts(options=options, height="400px")
         st.write(area_df)
-
+        
+        st.markdown("**Metros Cúbicos Mensuales Requeridos a Transportar por Área**")
 
         chart
         st.write(new_df)
