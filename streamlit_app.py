@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import seaborn as sns
 import plotly.graph_objects as go
+import datetime
 from datetime import time
 from datetime import datetime, timedelta
 from streamlit_echarts import st_pyecharts
@@ -62,7 +63,7 @@ image_bytes = buf.getvalue()
 st.sidebar.markdown("<hr style='border:2.5px solid white'> </hr>", unsafe_allow_html=True)
 
 st.sidebar.markdown("<h1 style='text-align: left; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
-funcion=st.sidebar.selectbox("Seleccione una Función",["Reporte Inicio-Término Turno","Transgresiones Historicas","Programación Rellenos","MDG 2024","Análisis Excel Avance IX Etapa"])
+funcion=st.sidebar.selectbox("Seleccione una Función",["Reporte Inicio-Término Turno","Transgresiones Históricas","Programación Rellenos","MDG 2024","Análisis Excel Avance IX Etapa"])
 
 url_despacho='https://icons8.com/icon/21183/in-transit'
 
@@ -79,11 +80,7 @@ if funcion=="Reporte Inicio-Término Turno":
 
     dias_a_restar = 10
 
-    import datetime
-    import streamlit as st
 
-    import datetime
-    import streamlit as st
 
     # Obtén la fecha de hoy y la fecha de hace 7 días
     hoy = datetime.date.today()
@@ -800,226 +797,252 @@ if funcion=="Reporte Inicio-Término Turno":
 
     
             
-    if funcion=="Transgresiones Historicas":
-        st.sidebar.title('Cargar archivo')
-        uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
-        if uploaded_file is not None:
-            df = pd.read_excel(uploaded_file)
-            st.write(df)
-            data = df[['apellido', 'nombre']].value_counts().reset_index()
-            data.columns = ['apellido', 'nombre', 'count']
-            data_grafico = data[data['apellido'] != 'Sin registro']
-            data_grafico = data_grafico[data_grafico['apellido'] != 'Sin Registro']
-
-
-            
-            pie = (
-                Pie()
-                .add("", [list(z) for z in zip(data_grafico['apellido'], data_grafico['count'])], radius=["40%", "75%"])
-                .set_global_opts(
-                    legend_opts=opts.LegendOpts(is_show=False), # Oculta la leyenda de colores
-                    graphic_opts=[
-                        opts.GraphicText(
-                            graphic_item=opts.GraphicItem(
-                                left="center",
-                                top="center",
-                                z=1
-                            ),
-                            graphic_textstyle_opts=opts.GraphicTextStyleOpts(
-                                text=f"{len(data_grafico)} Infractores",
-                                font="bold 17px Microsoft YaHei",
-                                graphic_basicstyle_opts=opts.GraphicBasicStyleOpts(fill="#333")
-                            )
-                        )
-                    ]
-                )
-                .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}"), # Muestra solo el apellido
-                                tooltip_opts=opts.TooltipOpts(formatter="{b}: {c} ({d}%)")) # Muestra el número y el porcentaje solo al pasar el mouse por encima
-            )
-            st.markdown("**Transgresiones de Velocidad por Operador**")
-            # Mostrar el gráfico en Streamlit
-            st_pyecharts(pie)
-            st.write(data)
-
-
-if funcion=="Programación Rellenos":
-
-    st.title("🧮 Programación Rellenos")
-
+if funcion=="Transgresiones Históricas":
     st.sidebar.title('Cargar archivo')
     uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
     if uploaded_file is not None:
         df = pd.read_excel(uploaded_file)
-        #st.write(df)
-
-        data_area = df.groupby('ÁREA')['TOTAL (M3)'].sum()
-        st.markdown("**Total m³ por Área**")
-
-        # Creamos una lista de diccionarios para la opción de datos en la serie
-        data_list_area = [{"value": v, "name": n} for n, v in data_area.items()]
-
-        # Calcular la suma total de los valores en data_list_area
-        total = sum(item['value'] for item in data_list_area)
-
-        print(f"La suma total de los valores en data_list_area es {total}")
-
-        # Calcular el total
-        #total = df['TOTAL (M3)'].sum()
-        #total =data_area[data_area.columns[0]].sum()
-
-        # Definir los colores de viridis
-        colormap = [
-            "#14C8E6", # C 20 M 79 Y 90 K 10
-            "#FF6B02", # C 0 M 42 Y 98 K 0
-            "#FF165A", # C 0 M 75 Y 89 K 0
-            "#00A1C9", # C 80 M 15 Y 30 K 0
-            "#BA4A28", # R 186 G 74 B 40
-            "#F8A302", # R 248 G 163 B 2
-            "#F15A56", # R 241 G 90 B 86
-            "#009EB0", # R 0 G 158 B 176
-            "#3D4552", # C 78 M 61 Y 46 K 38
-            "#7B1E20", # C 43 M 99 Y 90 K 31
-            "#C7B299", # C 22 M 27 Y 39 K 6
-            "#004E52", # C 87 M 35 Y 46 K 52
-            "#1D71B8", # C 85 M 50 Y 0 K 0
-            "#764A4A", # C 50 M 70 Y 60 K 31
-            "#BB5726", # bb5726
-            "#F4A700", # f4a700
-            "#E96C28", # e96c28
-            "#209EB0", # 209eb0
-            "#76151F", # 76151f
-            "#374752", # 374752
-            "#C8B499", # c8b499
-            "#004C4E", # 004c4e
-            "#6E4D48"  # 6e4d48
-        ]
+        st.write(df)
+        data = df[['apellido', 'nombre']].value_counts().reset_index()
+        data.columns = ['apellido', 'nombre', 'count']
+        data_grafico = data[data['apellido'] != 'Sin registro']
+        data_grafico = data_grafico[data_grafico['apellido'] != 'Sin Registro']
 
 
-        import matplotlib.colors
-        import numpy as np
-
-        # Genera una paleta de colores "cividis" para 19 colores
-        colormap = plt.cm.cividis(np.linspace(0, 1, 19))
-
-        # Convierte los colores a formato hexadecimal
-        colormap = [matplotlib.colors.rgb2hex(color) for color in colormap]
-
-        print(colormap)
-
-
-
-        # Asignar un color único a cada área
-        for i, item in enumerate(data_list_area):
-            item['itemStyle'] = {"color": colormap[i % len(colormap)]}
-
-        # Ordenar data_list_area en orden descendente según el valor
-        data_list_area.sort(key=lambda x: x['value'], reverse=True)
         
-        options = {
-            "tooltip": {"trigger": "item"},
-            "legend": {"show": False},
-            "series": [
-                {
-                    "name": "ÁREA",
-                    "type": "pie",
-                    "radius": ["40%", "70%"],
-                    "avoidLabelOverlap": False,
-                    "itemStyle": {
-                        "borderRadius": 10,
-                        "borderColor": "#fff",
-                        "borderWidth": 2,
-                    },
-                    "label": {
-                        "show": True,
-                        "position": "outside",
-                        "formatter": "{b}: {c} ({d}%)"
-                    },
-                    "emphasis": {
-                        "label": {"show": True, "fontSize": "20", "fontWeight": "bold"}
-                    },
-                    "labelLine": {"show": True},
-                    "data": data_list_area,
-                },
-                {
-                    "name": 'Total',
-                    "type": 'gauge',
-                    "startAngle": 90,
-                    "endAngle": -269.9999,
-                    "radius": '50%',
-                    "pointer": {"show": False},
-                    "detail": {"show": True, "fontSize": 20, "offsetCenter": [0, '40%']},
-                    "data": [{'value': total, 'name': 'Total M3'}],
-                    "title": {"show": False},
-                    "axisLine": {"show": False},
-                    "splitLine": {"show": False},
-                    "axisTick": {"show": False},
-                    "axisLabel": {"show": False},
-                    "anchor": {"show": False}
-                }
-            ],
-            
-        }
-
-
-
-        st_echarts(options=options, height="400px")
-
-        st.write(data_area)
-
-
-
-
-        # Acceder a los nombres de las columnas del 15 al 42
-        columnas = df.columns[21:43]  # Python usa indexación basada en 0, por lo que debes restar 1 a los índices
-
-        # Lista de columnas de fechas 
-        fechas=columnas
-
-        # Crear un nuevo dataframe con las columnas requeridas
-        new_df = pd.melt(df, id_vars=['ÁREA'], value_vars=fechas, var_name='Fecha', value_name='Metros Cúbicos')
-
-        # Convertir la columna 'Fecha' a formato de texto y extraer el mes y el año
-        new_df['Fecha'] = pd.to_datetime(new_df['Fecha']).dt.strftime('%Y-%m')
-
-        # Calcular la Metros Cúbicos para cada 'ÁREA' y 'Fecha'
-        new_df = new_df.groupby(['ÁREA', 'Fecha'])['Metros Cúbicos'].sum().reset_index()
-
-        # Calcular el total para cada 'Fecha'
-        total_df = new_df.groupby('Fecha')['Metros Cúbicos'].sum().reset_index()
-        total_df.columns = ['Fecha', 'Total']
-
-        # Unir el dataframe original con los totales
-        new_df = pd.merge(new_df, total_df, on='Fecha')
-        
-        # Ordena el DataFrame por 'Metros Cúbicos VP' en orden descendente
-        new_df = new_df.sort_values('ÁREA')
-
-        # Crea un diccionario que mapea cada 'ÁREA' a un color
-        color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
-        st.markdown("**Metros Cúbicos Mensuales a Transportar por Área**")
-        # Crea el gráfico de barras apiladas
-        chart = alt.Chart(new_df).mark_bar().encode(
-            x='Fecha:N',
-            y='Metros Cúbicos:Q',
-            color=alt.Color('ÁREA:N', scale=alt.Scale(scheme="cividis")),
-            tooltip=[
-                'Fecha:N', 
-                alt.Tooltip('ÁREA:N'),
-                alt.Tooltip('Metros Cúbicos:Q', format=',d'),
-                alt.Tooltip('Total:Q', format=',d')
-            ],
-            order=alt.Order(
-            'Fecha:N',
-            sort='ascending'
+        pie = (
+            Pie()
+            .add("", [list(z) for z in zip(data_grafico['apellido'], data_grafico['count'])], radius=["40%", "75%"])
+            .set_global_opts(
+                legend_opts=opts.LegendOpts(is_show=False), # Oculta la leyenda de colores
+                graphic_opts=[
+                    opts.GraphicText(
+                        graphic_item=opts.GraphicItem(
+                            left="center",
+                            top="center",
+                            z=1
+                        ),
+                        graphic_textstyle_opts=opts.GraphicTextStyleOpts(
+                            text=f"{len(data_grafico)} Infractores",
+                            font="bold 17px Microsoft YaHei",
+                            graphic_basicstyle_opts=opts.GraphicBasicStyleOpts(fill="#333")
+                        )
+                    )
+                ]
             )
-        ).properties(
-            width=800,
-            height=500
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}"), # Muestra solo el apellido
+                            tooltip_opts=opts.TooltipOpts(formatter="{b}: {c} ({d}%)")) # Muestra el número y el porcentaje solo al pasar el mouse por encima
         )
-        chart
+        st.markdown("**Transgresiones de Velocidad por Operador**")
+        # Mostrar el gráfico en Streamlit
+        st_pyecharts(pie)
+        st.write(data)
 
-    else:
-        st.markdown("Por favor Carga la Programación de Rellenos")
+
+if funcion=="Programación Rellenos":
+    base_id='appUIz9SCHdcZDk1T'
+    table_id='tblzZLoGJAP3cDwhj'
+    personal_access_token='patii9YeJWbaL2hRu.c4f92462f3b6cb1b0f43ba1e6194ab9266209c836167eca08688594167590d0d'
+    
+    def create_headers():
+        headers = {
+        'Authorization': 'Bearer ' + str(personal_access_token),
+        'Content-Type': 'application/json',
+        }
+        return headers
+
+    base_table_api_url = 'https://api.airtable.com/v0/{}/{}'.format(base_id, table_id)
+    headers=create_headers()
+    response = requests.get(base_table_api_url, headers=headers)
+    if response.status_code == 200:
+        # Convierte la respuesta en formato JSON a un diccionario
+        data = response.json()
+        
+        # Extrae los registros de la respuesta
+        records = data['records']
+        
+        # Crea una lista vacía para almacenar los datos de cada registro
+        rows = []
+        
+        # Recorre cada registro y extrae los datos necesarios
+        for record in records:
+            fields = record['fields']
+            rows.append(fields)
+
+        # Crea el DataFrame utilizando la lista de registros
+        df = pd.DataFrame(rows)
+
+    st.title("🧮 Programación Rellenos")
+
+
+
+    data_area = df.groupby('ÁREA')['TOTAL (M3)'].sum()
+    st.markdown("**Total m³ por Área**")
+
+    # Creamos una lista de diccionarios para la opción de datos en la serie
+    data_list_area = [{"value": v, "name": n} for n, v in data_area.items()]
+
+    # Calcular la suma total de los valores en data_list_area
+    total = sum(item['value'] for item in data_list_area)
+
+    print(f"La suma total de los valores en data_list_area es {total}")
+
+    # Calcular el total
+    #total = df['TOTAL (M3)'].sum()
+    #total =data_area[data_area.columns[0]].sum()
+
+    # Definir los colores de viridis
+    colormap = [
+        "#14C8E6", # C 20 M 79 Y 90 K 10
+        "#FF6B02", # C 0 M 42 Y 98 K 0
+        "#FF165A", # C 0 M 75 Y 89 K 0
+        "#00A1C9", # C 80 M 15 Y 30 K 0
+        "#BA4A28", # R 186 G 74 B 40
+        "#F8A302", # R 248 G 163 B 2
+        "#F15A56", # R 241 G 90 B 86
+        "#009EB0", # R 0 G 158 B 176
+        "#3D4552", # C 78 M 61 Y 46 K 38
+        "#7B1E20", # C 43 M 99 Y 90 K 31
+        "#C7B299", # C 22 M 27 Y 39 K 6
+        "#004E52", # C 87 M 35 Y 46 K 52
+        "#1D71B8", # C 85 M 50 Y 0 K 0
+        "#764A4A", # C 50 M 70 Y 60 K 31
+        "#BB5726", # bb5726
+        "#F4A700", # f4a700
+        "#E96C28", # e96c28
+        "#209EB0", # 209eb0
+        "#76151F", # 76151f
+        "#374752", # 374752
+        "#C8B499", # c8b499
+        "#004C4E", # 004c4e
+        "#6E4D48"  # 6e4d48
+    ]
+
+
+    import matplotlib.colors
+    import numpy as np
+
+    # Genera una paleta de colores "cividis" para 19 colores
+    colormap = plt.cm.cividis(np.linspace(0, 1, 19))
+
+    # Convierte los colores a formato hexadecimal
+    colormap = [matplotlib.colors.rgb2hex(color) for color in colormap]
+
+    print(colormap)
+
+
+
+    # Asignar un color único a cada área
+    for i, item in enumerate(data_list_area):
+        item['itemStyle'] = {"color": colormap[i % len(colormap)]}
+
+    # Ordenar data_list_area en orden descendente según el valor
+    data_list_area.sort(key=lambda x: x['value'], reverse=True)
+    
+    options = {
+        "tooltip": {"trigger": "item"},
+        "legend": {"show": False},
+        "series": [
+            {
+                "name": "ÁREA",
+                "type": "pie",
+                "radius": ["40%", "70%"],
+                "avoidLabelOverlap": False,
+                "itemStyle": {
+                    "borderRadius": 10,
+                    "borderColor": "#fff",
+                    "borderWidth": 2,
+                },
+                "label": {
+                    "show": True,
+                    "position": "outside",
+                    "formatter": "{b}: {c} ({d}%)"
+                },
+                "emphasis": {
+                    "label": {"show": True, "fontSize": "20", "fontWeight": "bold"}
+                },
+                "labelLine": {"show": True},
+                "data": data_list_area,
+            },
+            {
+                "name": 'Total',
+                "type": 'gauge',
+                "startAngle": 90,
+                "endAngle": -269.9999,
+                "radius": '50%',
+                "pointer": {"show": False},
+                "detail": {"show": True, "fontSize": 20, "offsetCenter": [0, '40%']},
+                "data": [{'value': total, 'name': 'Total M3'}],
+                "title": {"show": False},
+                "axisLine": {"show": False},
+                "splitLine": {"show": False},
+                "axisTick": {"show": False},
+                "axisLabel": {"show": False},
+                "anchor": {"show": False}
+            }
+        ],
+        
+    }
+
+
+
+    st_echarts(options=options, height="400px")
+
+    st.write(data_area)
+
+
+
+
+    # Acceder a los nombres de las columnas del 15 al 42
+    columnas = df.columns[21:43]  # Python usa indexación basada en 0, por lo que debes restar 1 a los índices
+
+    # Lista de columnas de fechas 
+    fechas=columnas
+
+    # Crear un nuevo dataframe con las columnas requeridas
+    new_df = pd.melt(df, id_vars=['ÁREA'], value_vars=fechas, var_name='Fecha', value_name='Metros Cúbicos')
+
+    # Convertir la columna 'Fecha' a formato de texto y extraer el mes y el año
+    new_df['Fecha'] = pd.to_datetime(new_df['Fecha']).dt.strftime('%Y-%m')
+
+    # Calcular la Metros Cúbicos para cada 'ÁREA' y 'Fecha'
+    new_df = new_df.groupby(['ÁREA', 'Fecha'])['Metros Cúbicos'].sum().reset_index()
+
+    # Calcular el total para cada 'Fecha'
+    total_df = new_df.groupby('Fecha')['Metros Cúbicos'].sum().reset_index()
+    total_df.columns = ['Fecha', 'Total']
+
+    # Unir el dataframe original con los totales
+    new_df = pd.merge(new_df, total_df, on='Fecha')
+    
+    # Ordena el DataFrame por 'Metros Cúbicos VP' en orden descendente
+    new_df = new_df.sort_values('ÁREA')
+
+    # Crea un diccionario que mapea cada 'ÁREA' a un color
+    color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
+    st.markdown("**Metros Cúbicos Mensuales a Transportar por Área**")
+    # Crea el gráfico de barras apiladas
+    chart = alt.Chart(new_df).mark_bar().encode(
+        x='Fecha:N',
+        y='Metros Cúbicos:Q',
+        color=alt.Color('ÁREA:N', scale=alt.Scale(scheme="cividis")),
+        tooltip=[
+            'Fecha:N', 
+            alt.Tooltip('ÁREA:N'),
+            alt.Tooltip('Metros Cúbicos:Q', format=',d'),
+            alt.Tooltip('Total:Q', format=',d')
+        ],
+        order=alt.Order(
+        'Fecha:N',
+        sort='ascending'
+        )
+    ).properties(
+        width=800,
+        height=500
+    )
+    chart
+
+
 
 if funcion== "MDG 2024":
 
@@ -1315,11 +1338,14 @@ if funcion== "Análisis Excel Avance IX Etapa":
             data = pd.concat([data, temp_df])
             
     
-
+        
 
         # Convertir la columna de fechas a tipo datetime
         data["Fecha"] = pd.to_datetime(data["Fecha"])
-        data = data[data["Fecha"] <= fecha_actual]
+        # Restar un día a las fechas
+        fechas_ayer = fecha_actual - np.timedelta64(1, 'D')
+        data = data[data["Fecha"] <= fechas_ayer]
+        
         # Definir los colores deseados
 
         # Definir los colores para las rectas
@@ -1365,7 +1391,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
 
         # Convertir la columna de fechas a tipo datetime
         data["Fecha"] = pd.to_datetime(data["Fecha"])
-        data = data[data["Fecha"] <= fecha_actual]
+        data = data[data["Fecha"] <= fechas_ayer]
 
         fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#76151f", "#bb5726"])
         fig.update_layout(width=900, height=500)
@@ -1373,7 +1399,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
         # Mostrar el gráfico
         #fig.show()
         st.plotly_chart(fig)
-        st.markdown("**Mapeado**")
+        st.markdown("**Producción Agrupada por Sección**")
         st.write(df_limpieza)
         st.markdown("**Media Movil**")
         st.write(df_limpieza_media_movil)
