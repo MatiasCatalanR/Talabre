@@ -74,6 +74,8 @@ url_despacho='https://icons8.com/icon/21183/in-transit'
 # Ahora 'data' contiene la respuesta de la API en formato JSON
 
 if funcion=="Reporte Inicio-Término Turno":
+    import datetime
+
     st.title('📊 Análisis de Relleno al Inicio y Término del Turno Diurno')
     # Obtener la fecha seleccionada por el usuario
     #selected_date = st.sidebar.date_input("Seleccione una fecha")
