@@ -63,7 +63,7 @@ image_bytes = buf.getvalue()
 st.sidebar.markdown("<hr style='border:2.5px solid white'> </hr>", unsafe_allow_html=True)
 
 st.sidebar.markdown("<h1 style='text-align: left; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
-funcion=st.sidebar.selectbox("Seleccione una Función",["Reporte Inicio-Término Turno","Transgresiones Históricas","Programación Rellenos","MDG 2024","Análisis Excel Avance IX Etapa"])
+funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","Transgresiones Históricas","Programación Rellenos","MDG 2024"])
 
 url_despacho='https://icons8.com/icon/21183/in-transit'
 
@@ -1340,18 +1340,17 @@ if funcion== "Análisis Excel Avance IX Etapa":
             data = pd.concat([data, temp_df])
             
     
-        
 
         # Convertir la columna de fechas a tipo datetime
         data["Fecha"] = pd.to_datetime(data["Fecha"])
         # Restar un día a las fechas
         fechas_ayer = fecha_actual - np.timedelta64(1, 'D')
         data = data[data["Fecha"] <= fechas_ayer]
-        
+
         # Definir los colores deseados
 
         # Definir los colores para las rectas
-        colores = ["#f4a700", "#374752", "#c8b499", "#76151f", "#bb5726", "#6e4d48"]
+        colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
 
         # Graficar los valores utilizando plotly
         fig = px.line(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Media Móvil 10 días")
@@ -1368,7 +1367,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
         fig.update_layout(width=900, height=500)
         st.plotly_chart(fig)
         # Obtener las secciones del DataFrame
-        secciones = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] != 'Total']["Secciones"].unique()
+        secciones = df_limpieza_media_movil["Secciones"].unique()
 
         # Crear un DataFrame para los valores y las fechas
         data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
@@ -1394,20 +1393,59 @@ if funcion== "Análisis Excel Avance IX Etapa":
         # Convertir la columna de fechas a tipo datetime
         data["Fecha"] = pd.to_datetime(data["Fecha"])
         data = data[data["Fecha"] <= fechas_ayer]
+        data_total = data[data['Seccion'] == 'Total']
+        data = data[data['Seccion'] != 'Total']
+        
 
-        fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#76151f", "#bb5726"])
+        df_total = df_limpieza[df_limpieza["Secciones"] == "Total"]
+
+        #PRUEBA
+        valores = df_total[df_total["Secciones"] == seccion].iloc[:, 2:-1]
+        
+        # Convertir las fechas a formato datetime
+        fechas = valores.columns  # Las fechas ya están en el formato correcto
+        
+        # Crear un DataFrame con las fechas, valores y sección
+        temp_df = pd.DataFrame({
+            "Fecha": fechas,
+            "Metros Cúbicos Compactados": valores.values[0],
+            "Seccion": seccion
+        })
+        import plotly.graph_objects as go
+
+        # Agregar el DataFrame temporal al DataFrame principal
+        data_total = temp_df
+        data_total["Fecha"] = pd.to_datetime(data_total["Fecha"])
+        data_total = data_total[data_total["Fecha"] <= fechas_ayer]
+        #PRUEBA
+        fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"])
+        # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
+        # Crear el trace adicional utilizando go.Scatter() y asignarle un nombre para la leyenda
+        scatter_trace = go.Scatter(
+            x=data_total["Fecha"],
+            y=data_total["Metros Cúbicos Compactados"],
+            mode="markers",
+            marker=dict(
+                symbol="x",  # Cambia la forma de los puntos a cuadrados
+                size=5,  # Cambia el tamaño de los puntos
+                color="black"  # Cambia el color de los puntos
+            ),
+            name="Relleno Total Diario"
+        )
+        # Agregar el trace adicional al gráfico de barras
+        fig.add_trace(scatter_trace)
+
         fig.update_layout(width=900, height=500)
 
         # Mostrar el gráfico
-        #fig.show()
         st.plotly_chart(fig)
-        st.markdown("**Producción Agrupada por Sección**")
-        st.write(df_limpieza)
-        st.markdown("**Media Movil**")
-        st.write(df_limpieza_media_movil)
+        #Tablas que pidió Camilo Sacar 
+        #st.markdown("**Producción Agrupada por Sección**")
+        #st.write(df_limpieza)
+        #st.markdown("**Media Movil**")
+        #st.write(df_limpieza_media_movil)
 
 
     else:
         # Si la respuesta de la API no fue exitosa, muestra un mensaje de error
         st.write('Error al obtener los datos de la API')        
-        df
