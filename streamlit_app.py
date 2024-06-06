@@ -301,7 +301,7 @@ if funcion=="Reporte Inicio-Término Turno":
                 } for lugar in all_lugares
             ],
         }
-        st_echarts(options=options, height="400px")
+        #st_echarts(options=options, height="400px")
 
 
 
@@ -313,12 +313,12 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
         m3_km_transportado=int(m3_transportados)/int(km_recorridos)
-        df['kph_mean']=df['kph_mean'].str.replace(',', '.').astype(float)
-        df['kph_mean'] = pd.to_numeric(df['kph_mean'])
-        df_velocidad = df[df['kph_mean'] > 15]
+        df['kph_mean_ruta']=df['kph_mean_ruta'].str.replace(',', '.').astype(float)
+        df['kph_mean_ruta'] = pd.to_numeric(df['kph_mean_ruta'])
+        df_velocidad = df[df['kph_mean_ruta'] > 15]
 
         #st.write(df_velocidad)
-        velocidad_promedio=round(df_velocidad['kph_mean'].mean(),2)
+        velocidad_promedio=round(df_velocidad['kph_mean_ruta'].mean(),2)
         #st.write(velocidad_promedio)
         option_v = {
             "tooltip": {
@@ -373,6 +373,7 @@ if funcion=="Reporte Inicio-Término Turno":
         }
 
         st_echarts(options=option_v)
+
 
         # Suponiendo que 'df' es tu DataFrame y que las columnas relevantes son 'fecha', 'patente', 'inicio_ciclo' y 'fin_carga'
 
@@ -488,6 +489,11 @@ if funcion=="Reporte Inicio-Término Turno":
         #st.write(turno_diurno_df)
         
         turno_diurno_df['inicio_turno_segundos'] = turno_diurno_df['inicio_turno'].apply(lambda x: x.hour * 3600 + x.minute * 60 + x.second)
+        # Contabilizar los registros con el valor True en la columna "cargado_inicio_turno"
+        inicio_cargado = (df['cargado_inicio_turno'] == 'True').sum()
+        # Mostrar el valor como un KPI en Streamlit
+        st.markdown(f'<h1 style="text-align: center;">{inicio_cargado}</h1>', unsafe_allow_html=True)
+        st.markdown('<p style="text-align: center; font-size: 20px;">Total Camiones Cargados al Inicio de Turno</p>', unsafe_allow_html=True)
 
         # Calcular el promedio, mínimo y máximo
         promedio_segundos = turno_diurno_df['inicio_turno_segundos'].mean()
@@ -700,7 +706,7 @@ if funcion=="Reporte Inicio-Término Turno":
         fig.update_yaxes(tickvals=list(range(0, 24*3600, 3600)), ticktext=[f'{h}:00:00' for h in range(24)])
         # Agrega un título al gráfico
         fig.update_layout(title='Primer Registro al Comienzo del Turno Diurno por Patente')
-        fig.update_layout(width=800, height=500)
+        fig.update_layout(width=1000, height=500)
         # Muestra el gráfico en Streamlit
         st.plotly_chart(fig)
 
@@ -751,7 +757,7 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
 
-        histograma = df[['t_cola_carga', 'tiempo_carga__min_', 'transito_cargado__min_', 't_cola_descarga', 'tiempo_descarga__min_', 'transito_descargado__min_', 'tiempo_ciclo__min_', 'kph_mean', 'kph_max', 'distancia_recorrida__km_', 'tiempo_demoras_min']]
+        histograma = df[['t_cola_carga', 'tiempo_carga__min_', 'transito_cargado__min_', 't_cola_descarga', 'tiempo_descarga__min_', 'transito_descargado__min_', 'tiempo_ciclo__min_', 'kph_mean','kph_mean_ruta', 'kph_max', 'distancia_recorrida__km_', 'tiempo_demoras_min']]
 
         # Set Seaborn style 
         sns.set_style("darkgrid") 
@@ -1045,10 +1051,318 @@ if funcion=="Programación Rellenos":
     chart
 
 
-
 if funcion== "MDG 2024":
 
     st.title("📚 MDG 2024")
+        # Crear DataFrame con los datos de los muros y las cantidades diarias depositadas
+    import plotly.express as px
+    import pandas as pd
+    from datetime import timedelta
+    import streamlit as st
+
+    # Crear DataFrame con los datos de los muros y las cantidades diarias depositadas
+    muros = ['MURO OESTE Y NO 1', 'MURO SUR', 'PRETIL 2 NS', 'PRETIL PPAL EBMN', 'MURO NORTE']
+
+    # Crear rango de fechas desde el 5 de junio hasta el 31 de diciembre
+    fechas = pd.date_range(start='2024-06-05', end='2024-12-31')
+
+    # Crear un DataFrame con una fila para cada combinación de fecha y muro
+    df_p = pd.DataFrame([(fecha, muro, 3000) for fecha in fechas for muro in muros], columns=['Fecha', 'Muro', 'Cantidad Diaria'])
+
+    # Ajustar la cantidad diaria para los días con cambio de turno
+    ultimo_cambio = pd.Timestamp('2024-05-31')
+    while ultimo_cambio < df_p['Fecha'].max():
+        ultimo_cambio += timedelta(days=10)
+        df_p.loc[df_p['Fecha'] == ultimo_cambio, 'Cantidad Diaria'] = 2100
+
+    # Definir los colores personalizados
+    colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
+    # Crear gráfico de barras apiladas utilizando Plotly Express
+    fig = px.bar(df_p, x='Fecha', y='Cantidad Diaria', color='Muro', barmode='stack', color_discrete_sequence=colores)
+    fig.update_layout(title='Proyección de Depósito Diario en Muros', xaxis_title='Fecha', yaxis_title='Cantidad (m³)')
+    fig.update_layout(width=900, height=500)
+    #st.plotly_chart(fig)
+
+    # Calcular la fecha del próximo cambio de turno
+    siguiente_cambio_turno = ultimo_cambio + timedelta(days=10)
+#### parte analisis historico
+    base_id='appOSiiFDWPc1n9hk'
+    table_id='tblEKC7vFnnSxQ8JB'
+    personal_access_token='patxqLGT8vqeIOi0S.0a930afb2c9db20d8ccfef398bbaafa7f3149a29f5c536e28aeae29f37fac516'
+    
+    def create_headers():
+        headers = {
+        'Authorization': 'Bearer ' + str(personal_access_token),
+        'Content-Type': 'application/json',
+        }
+        return headers
+
+    base_table_api_url = 'https://api.airtable.com/v0/{}/{}'.format(base_id, table_id)
+    headers=create_headers()
+    response = requests.get(base_table_api_url, headers=headers)
+    if response.status_code == 200:
+        # Convierte la respuesta en formato JSON a un diccionario
+        data = response.json()
+        
+        # Extrae los registros de la respuesta
+        records = data['records']
+        
+        # Crea una lista vacía para almacenar los datos de cada registro
+        rows = []
+        
+        # Recorre cada registro y extrae los datos necesarios
+        for record in records:
+            fields = record['fields']
+            rows.append(fields)
+
+        # Crea el DataFrame utilizando la lista de registros
+        df = pd.DataFrame(rows)
+        
+
+
+        # Define el orden de las columnas que deseas mantener
+        column_order = ['SECCION', 'Total/Fecha', '11/25/23', '11/26/23', '11/27/23', '11/28/23', '11/29/23', '11/30/23', '12/1/23', '12/2/23', '12/3/23', '12/4/23', '12/5/23', '12/6/23', '12/7/23', '12/8/23', '12/9/23', '12/10/23', '12/11/23', '12/12/23', '12/13/23', '12/14/23', '12/15/23', '12/16/23', '12/17/23', '12/18/23', '12/19/23', '12/20/23', '12/21/23', '12/22/23', '12/23/23', '12/24/23', '12/25/23', '12/26/23', '12/27/23', '12/28/23', '12/29/23', '12/30/23', '12/31/23', '1/1/24', '1/2/24', '1/3/24', '1/4/24', '1/5/24', '1/6/24', '1/7/24', '1/8/24', '1/9/24', '1/10/24', '1/11/24', '1/12/24', '1/13/24', '1/14/24', '1/15/24', '1/16/24', '1/17/24', '1/18/24', '1/19/24', '1/20/24', '1/21/24', '1/22/24', '1/23/24', '1/24/24', '1/25/24', '1/26/24', '1/27/24', '1/28/24', '1/29/24', '1/30/24', '1/31/24', '2/1/24', '2/2/24', '2/3/24', '2/4/24', '2/5/24', '2/6/24', '2/7/24', '2/8/24', '2/9/24', '2/10/24', '2/11/24', '2/12/24', '2/13/24', '2/14/24', '2/15/24', '2/16/24', '2/17/24', '2/18/24', '2/19/24', '2/20/24', '2/21/24', '2/22/24', '2/23/24', '2/24/24', '2/25/24', '2/26/24', '2/27/24', '2/28/24','2/29/24' ,'3/1/24', '3/2/24', '3/3/24', '3/4/24', '3/5/24', '3/6/24', '3/7/24', '3/8/24', '3/9/24', '3/10/24', '3/11/24', '3/12/24', '3/13/24', '3/14/24', '3/15/24', '3/16/24', '3/17/24', '3/18/24', '3/19/24', '3/20/24', '3/21/24', '3/22/24', '3/23/24', '3/24/24', '3/25/24', '3/26/24', '3/27/24', '3/28/24', '3/29/24', '3/30/24', '3/31/24', '4/1/24', '4/2/24', '4/3/24', '4/4/24', '4/5/24', '4/6/24', '4/7/24', '4/8/24', '4/9/24', '4/10/24', '4/11/24', '4/12/24', '4/13/24', '4/14/24','4/15/24', '4/16/24', '4/17/24', '4/18/24', '4/19/24', '4/20/24', '4/21/24', '4/22/24', '4/23/24', '4/24/24', '4/25/24', '4/26/24', '4/27/24', '4/28/24', '4/29/24', '4/30/24', '5/1/24', '5/2/24', '5/3/24', '5/4/24', '5/5/24', '5/6/24', '5/7/24', '5/8/24', '5/9/24', '5/10/24', '5/11/24', '5/12/24', '5/13/24', '5/14/24', '5/15/24', '5/16/24', '5/17/24', '5/18/24', '5/19/24', '5/20/24', '5/21/24', '5/22/24', '5/23/24', '5/24/24','5/25/24',"5/26/24", "5/27/24", "5/28/24", "5/29/24", "5/30/24", "5/31/24", "6/1/24", "6/2/24", "6/3/24", "6/4/24", "6/5/24", "6/6/24", "6/7/24", "6/8/24", "6/9/24", "6/10/24", "6/11/24", "6/12/24", "6/13/24", "6/14/24", "6/15/24", "6/16/24", "6/17/24", "6/18/24", "6/19/24", "6/20/24", "6/21/24", "6/22/24", "6/23/24", "6/24/24", "6/25/24", "6/26/24", "6/27/24", "6/28/24", "6/29/24", "6/30/24", "7/1/24", "7/2/24", "7/3/24", "7/4/24", "7/5/24", "7/6/24", "7/7/24", "7/8/24", "7/9/24", "7/10/24", "7/11/24", "7/12/24", "7/13/24", "7/14/24", "7/15/24", "7/16/24", "7/17/24", "7/18/24", "7/19/24", "7/20/24", "7/21/24", "7/22/24", "7/23/24", "7/24/24", "7/25/24", "7/26/24", "7/27/24", "7/28/24", "7/29/24", "7/30/24", "7/31/24", "8/1/24", "8/2/24", "8/3/24", "8/4/24", "8/5/24", "8/6/24", "8/7/24", "8/8/24", "8/9/24", "8/10/24", "8/11/24", "8/12/24", "8/13/24", "8/14/24", "8/15/24", "8/16/24", "8/17/24", "8/18/24", "8/19/24", "8/20/24", "8/21/24", "8/22/24", "8/23/24", "8/24/24", "8/25/24", "8/26/24", "8/27/24", "8/28/24", "8/29/24", "8/30/24", "8/31/24", "9/1/24", "9/2/24", "9/3/24", "9/4/24", "9/5/24", "9/6/24", "9/7/24", "9/8/24", "9/9/24", "9/10/24", "9/11/24", "9/12/24", "9/13/24", "9/14/24", "9/15/24", "9/16/24", "9/17/24", "9/18/24", "9/19/24", "9/20/24", "9/21/24", "9/22/24", "9/23/24", "9/24/24", "9/25/24", "9/26/24", "9/27/24", "9/28/24", "9/29/24", "9/30/24", "10/1/24", "10/2/24", "10/3/24", "10/4/24", "10/5/24", "10/6/24", "10/7/24", "10/8/24", "10/9/24", "10/10/24", "10/11/24", "10/12/24", "10/13/24", "10/14/24", "10/15/24", "10/16/24", "10/17/24", "10/18/24", "10/19/24", "10/20/24", "10/21/24", "10/22/24", "10/23/24", "10/24/24", "10/25/24", "10/26/24", "10/27/24", "10/28/24", "10/29/24", "10/30/24", "10/31/24", "11/1/24", "11/2/24", "11/3/24", "11/4/24", "11/5/24", "11/6/24", "11/7/24", "11/8/24", "11/9/24", "11/10/24", "11/11/24", "11/12/24", "11/13/24", "11/14/24", "11/15/24", "11/16/24", "11/17/24", "11/18/24", "11/19/24", "11/20/24", "11/21/24", "11/22/24", "11/23/24", "11/24/24", "11/25/24", "11/26/24", "11/27/24", "11/28/24", "11/29/24", "11/30/24", "12/1/24", "12/2/24", "12/3/24", "12/4/24", "12/5/24", "12/6/24", "12/7/24", "12/8/24", "12/9/24", "12/10/24", "12/11/24", "12/12/24", "12/13/24", "12/14/24", "12/15/24", "12/16/24", "12/17/24", "12/18/24", "12/19/24", "12/20/24", "12/21/24", "12/22/24", "12/23/24", "12/24/24", "12/25/24", "12/26/24", "12/27/24", "12/28/24", "12/29/24", "12/30/24", "12/31/24", "1/1/25", "1/2/25", "1/3/25", "1/4/25", "1/5/25", "1/6/25", "1/7/25", "1/8/25", "1/9/25", "1/10/25", "1/11/25", "1/12/25", "1/13/25", "1/14/25", "1/15/25", "1/16/25", "1/17/25", "1/18/25", "1/19/25", "1/20/25", "1/21/25", "1/22/25", "1/23/25", "1/24/25", "1/25/25", "1/26/25", "1/27/25", "1/28/25", "1/29/25", "1/30/25", "1/31/25", "2/1/25", "2/2/25", "2/3/25", "2/4/25", "2/5/25", "2/6/25", "2/7/25", "2/8/25", "2/9/25", "2/10/25", "2/11/25", "2/12/25", "2/13/25", "2/14/25", "2/15/25", "2/16/25", "2/17/25", "2/18/25", "2/19/25", "2/20/25", "2/21/25", "2/22/25", "2/23/25", "2/24/25", "2/25/25", "2/26/25", "2/27/25", "2/28/25", "3/1/25", "3/2/25", "3/3/25", "3/4/25", "3/5/25", "3/6/25", "3/7/25", "3/8/25", "3/9/25", "3/10/25", "3/11/25", "3/12/25", "3/13/25", "3/14/25", "3/15/25", "3/16/25", "3/17/25", "3/18/25", "3/19/25", "3/20/25", "3/21/25", "3/22/25", "3/23/25", "3/24/25", "3/25/25", "3/26/25", "3/27/25", "3/28/25", "3/29/25", "3/30/25", "3/31/25", "4/1/25", "4/2/25", "4/3/25", "4/4/25", "4/5/25", "4/6/25", "4/7/25", "4/8/25", "4/9/25", "4/10/25", "4/11/25", "4/12/25", "4/13/25", "4/14/25", "4/15/25", "4/16/25", "4/17/25", "4/18/25", "4/19/25", "4/20/25", "4/21/25", "4/22/25", "4/23/25", "4/24/25", "4/25/25", "4/26/25", "4/27/25", "4/28/25", "4/29/25", "4/30/25", "5/1/25", "5/2/25", "5/3/25", "5/4/25", "5/5/25", "5/6/25", "5/7/25", "5/8/25", "5/9/25", "5/10/25", "5/11/25", "5/12/25", "5/13/25", "5/14/25", "5/15/25", "5/16/25", "5/17/25", "5/18/25", "5/19/25", "5/20/25", "5/21/25", "5/22/25", "5/23/25", "5/24/25", "5/25/25", "5/26/25", "5/27/25", "5/28/25", "5/29/25", "5/30/25", "5/31/25", "6/1/25", "6/2/25", "6/3/25", "6/4/25", "6/5/25", "6/6/25", "6/7/25", "6/8/25", "6/9/25", "6/10/25", "6/11/25", "6/12/25", "6/13/25", "6/14/25", "6/15/25", "6/16/25", "6/17/25", "6/18/25", "6/19/25", "6/20/25", "6/21/25", "6/22/25", "6/23/25", "6/24/25", "6/25/25", "6/26/25", "6/27/25", "6/28/25", "6/29/25", "6/30/25", "7/1/25", "7/2/25", "7/3/25", "7/4/25", "7/5/25", "7/6/25", "7/7/25", "7/8/25", "7/9/25", "7/10/25", "7/11/25", "7/12/25", "7/13/25", "7/14/25", "7/15/25", "7/16/25", "7/17/25", "7/18/25", "7/19/25", "7/20/25", "7/21/25", "7/22/25", "7/23/25", "7/24/25", "7/25/25", "7/26/25", "7/27/25", "7/28/25", "7/29/25", "7/30/25", "7/31/25", "8/1/25", "8/2/25", "8/3/25", "8/4/25", "8/5/25", "8/6/25", "8/7/25", "8/8/25", "8/9/25", "8/10/25", "8/11/25", "8/12/25", "8/13/25", "8/14/25", "8/15/25", "8/16/25", "8/17/25", "8/18/25", "8/19/25", "8/20/25", "8/21/25", "8/22/25", "8/23/25", "8/24/25", "8/25/25", "8/26/25", "8/27/25", "8/28/25", "8/29/25", "8/30/25", "8/31/25", "9/1/25", "9/2/25", "9/3/25", "9/4/25", "9/5/25", "9/6/25", "9/7/25", "9/8/25", "9/9/25", "9/10/25", "9/11/25", "9/12/25", "9/13/25", "9/14/25", "9/15/25", "9/16/25", "9/17/25", "9/18/25", "9/19/25", "9/20/25", "9/21/25", "9/22/25", "9/23/25", "9/24/25", "9/25/25", "9/26/25", "9/27/25", "9/28/25", "9/29/25", "9/30/25", "10/1/25", "10/2/25", "10/3/25", "10/4/25", "10/5/25", "10/6/25", "10/7/25", "10/8/25", "10/9/25", "10/10/25", "10/11/25", "10/12/25", "10/13/25", "10/14/25", "10/15/25", "10/16/25", "10/17/25", "10/18/25", "10/19/25", "10/20/25", "10/21/25", "10/22/25", "10/23/25", "10/24/25", "10/25/25", "10/26/25", "10/27/25", "10/28/25", "10/29/25", "10/30/25", "10/31/25", "11/1/25", "11/2/25", "11/3/25", "11/4/25", "11/5/25", "11/6/25", "11/7/25", "11/8/25", "11/9/25", "11/10/25", "11/11/25", "11/12/25", "11/13/25", "11/14/25", "11/15/25", "11/16/25", "11/17/25", "11/18/25", "11/19/25", "11/20/25", "11/21/25", "11/22/25", "11/23/25", "11/24/25", "11/25/25", "11/26/25", "11/27/25", "11/28/25", "11/29/25", "11/30/25", "12/1/25", "12/2/25", "12/3/25", "12/4/25", "12/5/25", "12/6/25", "12/7/25", "12/8/25", "12/9/25", "12/10/25", "12/11/25", "12/12/25", "12/13/25", "12/14/25", "12/15/25", "12/16/25", "12/17/25", "12/18/25", "12/19/25", "12/20/25", "12/21/25", "12/22/25", "12/23/25", "12/24/25", "12/25/25", "12/26/25", "12/27/25"]
+
+        # Reindexa el DataFrame utilizando el orden de las columnas
+        df = df.reindex(columns=column_order)
+    fecha_actual = np.datetime64(datetime.now().date())
+    mapeo = {
+        'ZAMPEADO PRETIL PRINCIPAL T3 4.2.1.1.1': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2 INTERNO': 'PRETIL PPAL EBMN',
+        'ZAMPEADO PRETIL CONTORNO (ANILLO) EBMN 5.1.2.3.1': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL CONTORNO (ANILLO) EBMN  5.1.2.3.2': 'PRETIL PPAL EBMN',
+        'ZAMPEADO PRETIL PRINCIPAL T1 4.2.1.1.1': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL PRINCIPAL T1 4.2.1.1.2': 'PRETIL PPAL EBMN',
+        'RELLENO PLATAFORMAS 1,2,3,4,5 y 6 EBMN  5.1.2.2.2': 'PRETIL PPAL EBMN',
+        'ZAMPEADO PLATAFORMAS EBMN 1,2,3,4,5 y 6  5.1.2.2.1': 'PRETIL PPAL EBMN',
+        'RELLENO ZAMPEADO CAMINO PRETIL PRINCIPAL T1 4.2.1.1.1': 'CAMINOS ZAMPEADO',
+        'BYPASS EBMN (ZAMPEADO)': 'CAMINOS ZAMPEADO',         
+        'RELLENO AGUAS ABAJO MURO OESTE 1.4.1.3.1': 'MURO OESTE Y NO 1',
+        'RELLENO AGUAS ABAJO MURO NOROESTE 1 1.3.1.2.1': 'MURO OESTE Y NO 1',
+        'RELLENO MURO SUR TRAMO 1 1.5.1.4.2': 'MURO SUR',
+        'ZAMPEADO PREIL 2N-S': 'PRETIL 2 NS',
+        'Total': 'Total'
+    }
+
+    # Crear la nueva columna 'Unidad de Negocio'
+    df['Secciones']=df['SECCION'].map(mapeo)
+    
+
+
+    df_limpieza = df.drop("SECCION", axis=1)
+    df_limpieza = df_limpieza.groupby("Secciones").sum()
+    df_limpieza = df_limpieza.reset_index()
+
+    # Crear un nuevo dataframe con la columna 'secciones'
+    df_secciones = pd.DataFrame(df_limpieza['Secciones'])
+    
+
+    # Calcula la media móvil de 10 días para cada sección
+    df_limpieza_media_movil = df_limpieza.iloc[:, 2:].rolling(window=10, axis=1).mean()
+
+
+    # Concatenar el nuevo dataframe con 'df_limpieza_mediamovil'
+    df_limpieza_media_movil = pd.concat([df_limpieza_media_movil, df_secciones], axis=1)
+    #st.write(df_final)
+    # Imprime el nuevo dataframe con la media móvil de 10 días
+
+    # Obtener las secciones del DataFrame
+    secciones = df_limpieza_media_movil["Secciones"].unique()
+    
+    # Crear un DataFrame para los valores y las fechas
+    data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
+    lista_fecha=[]
+
+    for seccion in secciones:
+        # Obtener los valores de la sección
+        valores = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] == seccion].iloc[:, 2:-1]
+        
+        # Convertir las fechas a formato datetime
+        fechas = valores.columns  # Las fechas ya están en el formato correcto
+        
+        # Crear un DataFrame con las fechas, valores y sección
+        temp_df = pd.DataFrame({
+            "Fecha": fechas,
+            "Metros Cúbicos Compactados": valores.values[0],
+            "Seccion": seccion
+        })
+        ultima_fecha = temp_df[temp_df["Metros Cúbicos Compactados"] != 0]["Fecha"].max()
+
+        # Agregar el DataFrame temporal al DataFrame principal
+        data = pd.concat([data, temp_df])
+        lista_fecha.append(ultima_fecha)
+
+    lista_fecha = max(lista_fecha)
+    
+    lista_fecha=pd.to_datetime(lista_fecha)
+    
+    
+
+    # Convertir la columna de fechas a tipo datetime
+    data["Fecha"] = pd.to_datetime(data["Fecha"])
+    # Restar un día a las fechas
+    fechas_ayer = fecha_actual - np.timedelta64(1, 'D')
+    
+    data = data[data["Fecha"] <= fechas_ayer]
+
+    # Definir los colores deseados
+
+    # Definir los colores para las rectas
+    colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
+
+    # Graficar los valores utilizando plotly
+    fig = px.line(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Media Móvil 10 días")
+
+    # Modificar el color de las rectas
+    for i, color in enumerate(colores):
+        fig.data[i].line.color = color
+
+    # Añadir una recta para el valor 3000
+    fig.add_trace(go.Scatter(x=data["Fecha"], y=[3000] * len(data), mode="lines", name="Meta Diaria Frentes", line_color="#209eb0"))
+    # Añadir una recta para el valor 15000
+    fig.add_trace(go.Scatter(x=data["Fecha"], y=[15000] * len(data), mode="lines", name="Meta Diaria Total", line_color="#bb5726"))
+
+    fig.update_layout(width=900, height=500)
+    st.plotly_chart(fig)
+    # Obtener las secciones del DataFrame
+    secciones = df_limpieza_media_movil["Secciones"].unique()
+
+    # Crear un DataFrame para los valores y las fechas
+    data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
+
+    # Obtener los valores y las fechas para cada sección
+    for seccion in secciones:
+        # Obtener los valores de la sección
+        valores = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] == seccion].iloc[:, 2:-1]
+        
+        # Convertir las fechas a formato datetime
+        fechas = valores.columns  # Las fechas ya están en el formato correcto
+        
+        # Crear un DataFrame con las fechas, valores y sección
+        temp_df = pd.DataFrame({
+            "Fecha": fechas,
+            "Metros Cúbicos Compactados": valores.values[0],
+            "Seccion": seccion
+        })
+        
+        # Agregar el DataFrame temporal al DataFrame principal
+        data = pd.concat([data, temp_df])
+
+    # Convertir la columna de fechas a tipo datetime
+    data["Fecha"] = pd.to_datetime(data["Fecha"])
+    data = data[data["Fecha"] <= fechas_ayer]
+    data_total = data[data['Seccion'] == 'Total']
+    data = data[data['Seccion'] != 'Total']
+    
+
+    df_total = df_limpieza[df_limpieza["Secciones"] == "Total"]
+
+    #PRUEBA
+    valores = df_total[df_total["Secciones"] == seccion].iloc[:, 2:-1]
+    
+    # Convertir las fechas a formato datetime
+    fechas = valores.columns  # Las fechas ya están en el formato correcto
+    
+    # Crear un DataFrame con las fechas, valores y sección
+    temp_df = pd.DataFrame({
+        "Fecha": fechas,
+        "Metros Cúbicos Compactados": valores.values[0],
+        "Seccion": seccion
+    })
+    import plotly.graph_objects as go
+
+    # Agregar el DataFrame temporal al DataFrame principal
+    data_total = temp_df
+    data_total["Fecha"] = pd.to_datetime(data_total["Fecha"])
+    data_total = data_total[data_total["Fecha"] <= fechas_ayer]
+    #PRUEBA
+    fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"])
+    # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
+    # Crear el trace adicional utilizando go.Scatter() y asignarle un nombre para la leyenda
+    scatter_trace = go.Scatter(
+        x=data_total["Fecha"],
+        y=data_total["Metros Cúbicos Compactados"],
+        mode="markers",
+        marker=dict(
+            symbol="x",  # Cambia la forma de los puntos a cuadrados
+            size=5,  # Cambia el tamaño de los puntos
+            color="black"  # Cambia el color de los puntos
+        ),
+        name="Relleno Total Diario"
+    )
+    # Agregar el trace adicional al gráfico de barras
+    fig.add_trace(scatter_trace)
+
+    fig.update_layout(width=900, height=500)
+
+
+
+
+    # Crear DataFrame con los datos de los muros y las cantidades diarias depositadas
+    muros = ['MURO OESTE Y NO 1', 'MURO SUR', 'PRETIL 2 NS', 'PRETIL PPAL EBMN', 'CAMINOS ZAMPEADO']
+
+    # Crear rango de fechas desde el 5 de junio hasta el 31 de diciembre
+    fechas = pd.date_range(start='2024-06-05', end='2024-12-31')
+
+    # Crear un DataFrame con una fila para cada combinación de fecha y muro
+    suma_proyectado=df_p['Cantidad Diaria'].sum()
+    suma_actual=df_limpieza['Total/Fecha'][4]
+    suma_diciembre=int(suma_actual)+int(suma_proyectado)
+    style_metric_cards()
+
+
+    # Ajustar la cantidad diaria para los días con cambio de turno
+    ultimo_cambio = pd.Timestamp('2024-05-31')
+    while ultimo_cambio < df_p['Fecha'].max():
+        ultimo_cambio += timedelta(days=10)
+        df_p.loc[df_p['Fecha'] == ultimo_cambio, 'Cantidad Diaria'] = 2100
+    df_p['Cantidad Diaria'] = df_p['Cantidad Diaria'].rolling(window=10).mean()
+
+    # Definir los colores personalizados
+    colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
+
+    # Crear gráfico de barras apiladas utilizando Plotly Express
+    fig1 = px.bar(df_p, x='Fecha', y='Cantidad Diaria', color='Muro', barmode='stack', color_discrete_sequence=colores)
+    fig1.update_layout(title='Depósito Diario en Muros Actual-Requerido', xaxis_title='Fecha', yaxis_title='Media Móvil 10 días(m³)')
+
+    # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
+    scatter_trace = go.Scatter(
+        x=data_total["Fecha"],
+        y=data_total["Metros Cúbicos Compactados"],
+        mode="markers",
+        marker=dict(
+            symbol="x",  # Cambia la forma de los puntos a cuadrados
+            size=5,  # Cambia el tamaño de los puntos
+            color="black"  # Cambia el color de los puntos
+        ),
+        name="Relleno Total Diario"
+    )
+
+    # Crear el segundo gráfico de barras
+    fig2 = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=colores)
+
+    # Agregar los trazos del segundo gráfico y el gráfico de dispersión al primer gráfico de barras
+    for trace in fig2.data:
+        fig1.add_trace(trace)
+    fig1.add_trace(scatter_trace)
+
+    fig1.update_layout(width=900, height=500)
+    st.plotly_chart(fig1)
+    col1, col2,col3=st.columns(3)
+
+
+    col1.metric(label="Esperado a diciembre",value=suma_diciembre,delta=str(round(suma_diciembre/2600000*100,1))+"% del MDG")
+    col2.metric(label="Acumulado Histórico",value=suma_actual,delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
+    col3.metric(label="Total por Depositar",value=suma_diciembre-suma_actual,delta=str(-round(((suma_diciembre-suma_actual)/suma_diciembre)*100,1))+"% Restante")
+
+### parte analisis historico
+
+
+
+
+
+        
 
     st.sidebar.title('Cargar archivo')
     uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
@@ -1058,7 +1372,7 @@ if funcion== "MDG 2024":
 
         data_area = df.groupby('ÁREA')['TOTAL (M3)'].sum()
 
-
+    
 
 
 
@@ -1234,173 +1548,98 @@ if funcion== "MDG 2024":
 
 if funcion== "Análisis Excel Avance IX Etapa":
     st.title("📈 Análisis Avance IX Etapa")
-    a=1
-    if a==1:
-
-        base_id='appOSiiFDWPc1n9hk'
-        table_id='tblEKC7vFnnSxQ8JB'
-        personal_access_token='patxqLGT8vqeIOi0S.0a930afb2c9db20d8ccfef398bbaafa7f3149a29f5c536e28aeae29f37fac516'
-        
-        def create_headers():
-            headers = {
-            'Authorization': 'Bearer ' + str(personal_access_token),
-            'Content-Type': 'application/json',
-            }
-            return headers
-
-        base_table_api_url = 'https://api.airtable.com/v0/{}/{}'.format(base_id, table_id)
-        headers=create_headers()
-        response = requests.get(base_table_api_url, headers=headers)
-        if response.status_code == 200:
-            # Convierte la respuesta en formato JSON a un diccionario
-            data = response.json()
-            
-            # Extrae los registros de la respuesta
-            records = data['records']
-            
-            # Crea una lista vacía para almacenar los datos de cada registro
-            rows = []
-            
-            # Recorre cada registro y extrae los datos necesarios
-            for record in records:
-                fields = record['fields']
-                rows.append(fields)
-
-            # Crea el DataFrame utilizando la lista de registros
-            df = pd.DataFrame(rows)
-            
 
 
-            # Define el orden de las columnas que deseas mantener
-            column_order = ['SECCION', 'Total/Fecha', '11/25/23', '11/26/23', '11/27/23', '11/28/23', '11/29/23', '11/30/23', '12/1/23', '12/2/23', '12/3/23', '12/4/23', '12/5/23', '12/6/23', '12/7/23', '12/8/23', '12/9/23', '12/10/23', '12/11/23', '12/12/23', '12/13/23', '12/14/23', '12/15/23', '12/16/23', '12/17/23', '12/18/23', '12/19/23', '12/20/23', '12/21/23', '12/22/23', '12/23/23', '12/24/23', '12/25/23', '12/26/23', '12/27/23', '12/28/23', '12/29/23', '12/30/23', '12/31/23', '1/1/24', '1/2/24', '1/3/24', '1/4/24', '1/5/24', '1/6/24', '1/7/24', '1/8/24', '1/9/24', '1/10/24', '1/11/24', '1/12/24', '1/13/24', '1/14/24', '1/15/24', '1/16/24', '1/17/24', '1/18/24', '1/19/24', '1/20/24', '1/21/24', '1/22/24', '1/23/24', '1/24/24', '1/25/24', '1/26/24', '1/27/24', '1/28/24', '1/29/24', '1/30/24', '1/31/24', '2/1/24', '2/2/24', '2/3/24', '2/4/24', '2/5/24', '2/6/24', '2/7/24', '2/8/24', '2/9/24', '2/10/24', '2/11/24', '2/12/24', '2/13/24', '2/14/24', '2/15/24', '2/16/24', '2/17/24', '2/18/24', '2/19/24', '2/20/24', '2/21/24', '2/22/24', '2/23/24', '2/24/24', '2/25/24', '2/26/24', '2/27/24', '2/28/24','2/29/24' ,'3/1/24', '3/2/24', '3/3/24', '3/4/24', '3/5/24', '3/6/24', '3/7/24', '3/8/24', '3/9/24', '3/10/24', '3/11/24', '3/12/24', '3/13/24', '3/14/24', '3/15/24', '3/16/24', '3/17/24', '3/18/24', '3/19/24', '3/20/24', '3/21/24', '3/22/24', '3/23/24', '3/24/24', '3/25/24', '3/26/24', '3/27/24', '3/28/24', '3/29/24', '3/30/24', '3/31/24', '4/1/24', '4/2/24', '4/3/24', '4/4/24', '4/5/24', '4/6/24', '4/7/24', '4/8/24', '4/9/24', '4/10/24', '4/11/24', '4/12/24', '4/13/24', '4/14/24','4/15/24', '4/16/24', '4/17/24', '4/18/24', '4/19/24', '4/20/24', '4/21/24', '4/22/24', '4/23/24', '4/24/24', '4/25/24', '4/26/24', '4/27/24', '4/28/24', '4/29/24', '4/30/24', '5/1/24', '5/2/24', '5/3/24', '5/4/24', '5/5/24', '5/6/24', '5/7/24', '5/8/24', '5/9/24', '5/10/24', '5/11/24', '5/12/24', '5/13/24', '5/14/24', '5/15/24', '5/16/24', '5/17/24', '5/18/24', '5/19/24', '5/20/24', '5/21/24', '5/22/24', '5/23/24', '5/24/24','5/25/24',"5/26/24", "5/27/24", "5/28/24", "5/29/24", "5/30/24", "5/31/24", "6/1/24", "6/2/24", "6/3/24", "6/4/24", "6/5/24", "6/6/24", "6/7/24", "6/8/24", "6/9/24", "6/10/24", "6/11/24", "6/12/24", "6/13/24", "6/14/24", "6/15/24", "6/16/24", "6/17/24", "6/18/24", "6/19/24", "6/20/24", "6/21/24", "6/22/24", "6/23/24", "6/24/24", "6/25/24", "6/26/24", "6/27/24", "6/28/24", "6/29/24", "6/30/24", "7/1/24", "7/2/24", "7/3/24", "7/4/24", "7/5/24", "7/6/24", "7/7/24", "7/8/24", "7/9/24", "7/10/24", "7/11/24", "7/12/24", "7/13/24", "7/14/24", "7/15/24", "7/16/24", "7/17/24", "7/18/24", "7/19/24", "7/20/24", "7/21/24", "7/22/24", "7/23/24", "7/24/24", "7/25/24", "7/26/24", "7/27/24", "7/28/24", "7/29/24", "7/30/24", "7/31/24", "8/1/24", "8/2/24", "8/3/24", "8/4/24", "8/5/24", "8/6/24", "8/7/24", "8/8/24", "8/9/24", "8/10/24", "8/11/24", "8/12/24", "8/13/24", "8/14/24", "8/15/24", "8/16/24", "8/17/24", "8/18/24", "8/19/24", "8/20/24", "8/21/24", "8/22/24", "8/23/24", "8/24/24", "8/25/24", "8/26/24", "8/27/24", "8/28/24", "8/29/24", "8/30/24", "8/31/24", "9/1/24", "9/2/24", "9/3/24", "9/4/24", "9/5/24", "9/6/24", "9/7/24", "9/8/24", "9/9/24", "9/10/24", "9/11/24", "9/12/24", "9/13/24", "9/14/24", "9/15/24", "9/16/24", "9/17/24", "9/18/24", "9/19/24", "9/20/24", "9/21/24", "9/22/24", "9/23/24", "9/24/24", "9/25/24", "9/26/24", "9/27/24", "9/28/24", "9/29/24", "9/30/24", "10/1/24", "10/2/24", "10/3/24", "10/4/24", "10/5/24", "10/6/24", "10/7/24", "10/8/24", "10/9/24", "10/10/24", "10/11/24", "10/12/24", "10/13/24", "10/14/24", "10/15/24", "10/16/24", "10/17/24", "10/18/24", "10/19/24", "10/20/24", "10/21/24", "10/22/24", "10/23/24", "10/24/24", "10/25/24", "10/26/24", "10/27/24", "10/28/24", "10/29/24", "10/30/24", "10/31/24", "11/1/24", "11/2/24", "11/3/24", "11/4/24", "11/5/24", "11/6/24", "11/7/24", "11/8/24", "11/9/24", "11/10/24", "11/11/24", "11/12/24", "11/13/24", "11/14/24", "11/15/24", "11/16/24", "11/17/24", "11/18/24", "11/19/24", "11/20/24", "11/21/24", "11/22/24", "11/23/24", "11/24/24", "11/25/24", "11/26/24", "11/27/24", "11/28/24", "11/29/24", "11/30/24", "12/1/24", "12/2/24", "12/3/24", "12/4/24", "12/5/24", "12/6/24", "12/7/24", "12/8/24", "12/9/24", "12/10/24", "12/11/24", "12/12/24", "12/13/24", "12/14/24", "12/15/24", "12/16/24", "12/17/24", "12/18/24", "12/19/24", "12/20/24", "12/21/24", "12/22/24", "12/23/24", "12/24/24", "12/25/24", "12/26/24", "12/27/24", "12/28/24", "12/29/24", "12/30/24", "12/31/24", "1/1/25", "1/2/25", "1/3/25", "1/4/25", "1/5/25", "1/6/25", "1/7/25", "1/8/25", "1/9/25", "1/10/25", "1/11/25", "1/12/25", "1/13/25", "1/14/25", "1/15/25", "1/16/25", "1/17/25", "1/18/25", "1/19/25", "1/20/25", "1/21/25", "1/22/25", "1/23/25", "1/24/25", "1/25/25", "1/26/25", "1/27/25", "1/28/25", "1/29/25", "1/30/25", "1/31/25", "2/1/25", "2/2/25", "2/3/25", "2/4/25", "2/5/25", "2/6/25", "2/7/25", "2/8/25", "2/9/25", "2/10/25", "2/11/25", "2/12/25", "2/13/25", "2/14/25", "2/15/25", "2/16/25", "2/17/25", "2/18/25", "2/19/25", "2/20/25", "2/21/25", "2/22/25", "2/23/25", "2/24/25", "2/25/25", "2/26/25", "2/27/25", "2/28/25", "3/1/25", "3/2/25", "3/3/25", "3/4/25", "3/5/25", "3/6/25", "3/7/25", "3/8/25", "3/9/25", "3/10/25", "3/11/25", "3/12/25", "3/13/25", "3/14/25", "3/15/25", "3/16/25", "3/17/25", "3/18/25", "3/19/25", "3/20/25", "3/21/25", "3/22/25", "3/23/25", "3/24/25", "3/25/25", "3/26/25", "3/27/25", "3/28/25", "3/29/25", "3/30/25", "3/31/25", "4/1/25", "4/2/25", "4/3/25", "4/4/25", "4/5/25", "4/6/25", "4/7/25", "4/8/25", "4/9/25", "4/10/25", "4/11/25", "4/12/25", "4/13/25", "4/14/25", "4/15/25", "4/16/25", "4/17/25", "4/18/25", "4/19/25", "4/20/25", "4/21/25", "4/22/25", "4/23/25", "4/24/25", "4/25/25", "4/26/25", "4/27/25", "4/28/25", "4/29/25", "4/30/25", "5/1/25", "5/2/25", "5/3/25", "5/4/25", "5/5/25", "5/6/25", "5/7/25", "5/8/25", "5/9/25", "5/10/25", "5/11/25", "5/12/25", "5/13/25", "5/14/25", "5/15/25", "5/16/25", "5/17/25", "5/18/25", "5/19/25", "5/20/25", "5/21/25", "5/22/25", "5/23/25", "5/24/25", "5/25/25", "5/26/25", "5/27/25", "5/28/25", "5/29/25", "5/30/25", "5/31/25", "6/1/25", "6/2/25", "6/3/25", "6/4/25", "6/5/25", "6/6/25", "6/7/25", "6/8/25", "6/9/25", "6/10/25", "6/11/25", "6/12/25", "6/13/25", "6/14/25", "6/15/25", "6/16/25", "6/17/25", "6/18/25", "6/19/25", "6/20/25", "6/21/25", "6/22/25", "6/23/25", "6/24/25", "6/25/25", "6/26/25", "6/27/25", "6/28/25", "6/29/25", "6/30/25", "7/1/25", "7/2/25", "7/3/25", "7/4/25", "7/5/25", "7/6/25", "7/7/25", "7/8/25", "7/9/25", "7/10/25", "7/11/25", "7/12/25", "7/13/25", "7/14/25", "7/15/25", "7/16/25", "7/17/25", "7/18/25", "7/19/25", "7/20/25", "7/21/25", "7/22/25", "7/23/25", "7/24/25", "7/25/25", "7/26/25", "7/27/25", "7/28/25", "7/29/25", "7/30/25", "7/31/25", "8/1/25", "8/2/25", "8/3/25", "8/4/25", "8/5/25", "8/6/25", "8/7/25", "8/8/25", "8/9/25", "8/10/25", "8/11/25", "8/12/25", "8/13/25", "8/14/25", "8/15/25", "8/16/25", "8/17/25", "8/18/25", "8/19/25", "8/20/25", "8/21/25", "8/22/25", "8/23/25", "8/24/25", "8/25/25", "8/26/25", "8/27/25", "8/28/25", "8/29/25", "8/30/25", "8/31/25", "9/1/25", "9/2/25", "9/3/25", "9/4/25", "9/5/25", "9/6/25", "9/7/25", "9/8/25", "9/9/25", "9/10/25", "9/11/25", "9/12/25", "9/13/25", "9/14/25", "9/15/25", "9/16/25", "9/17/25", "9/18/25", "9/19/25", "9/20/25", "9/21/25", "9/22/25", "9/23/25", "9/24/25", "9/25/25", "9/26/25", "9/27/25", "9/28/25", "9/29/25", "9/30/25", "10/1/25", "10/2/25", "10/3/25", "10/4/25", "10/5/25", "10/6/25", "10/7/25", "10/8/25", "10/9/25", "10/10/25", "10/11/25", "10/12/25", "10/13/25", "10/14/25", "10/15/25", "10/16/25", "10/17/25", "10/18/25", "10/19/25", "10/20/25", "10/21/25", "10/22/25", "10/23/25", "10/24/25", "10/25/25", "10/26/25", "10/27/25", "10/28/25", "10/29/25", "10/30/25", "10/31/25", "11/1/25", "11/2/25", "11/3/25", "11/4/25", "11/5/25", "11/6/25", "11/7/25", "11/8/25", "11/9/25", "11/10/25", "11/11/25", "11/12/25", "11/13/25", "11/14/25", "11/15/25", "11/16/25", "11/17/25", "11/18/25", "11/19/25", "11/20/25", "11/21/25", "11/22/25", "11/23/25", "11/24/25", "11/25/25", "11/26/25", "11/27/25", "11/28/25", "11/29/25", "11/30/25", "12/1/25", "12/2/25", "12/3/25", "12/4/25", "12/5/25", "12/6/25", "12/7/25", "12/8/25", "12/9/25", "12/10/25", "12/11/25", "12/12/25", "12/13/25", "12/14/25", "12/15/25", "12/16/25", "12/17/25", "12/18/25", "12/19/25", "12/20/25", "12/21/25", "12/22/25", "12/23/25", "12/24/25", "12/25/25", "12/26/25", "12/27/25"]
-
-            # Reindexa el DataFrame utilizando el orden de las columnas
-            df = df.reindex(columns=column_order)
-        fecha_actual = np.datetime64(datetime.now().date())
-        mapeo = {
-            'ZAMPEADO PRETIL PRINCIPAL T3 4.2.1.1.1': 'PRETIL PPAL EBMN',
-            'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2': 'PRETIL PPAL EBMN',
-            'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2 INTERNO': 'PRETIL PPAL EBMN',
-            'ZAMPEADO PRETIL CONTORNO (ANILLO) EBMN 5.1.2.3.1': 'PRETIL PPAL EBMN',
-            'RELLENO PRETIL CONTORNO (ANILLO) EBMN  5.1.2.3.2': 'PRETIL PPAL EBMN',
-            'ZAMPEADO PRETIL PRINCIPAL T1 4.2.1.1.1': 'PRETIL PPAL EBMN',
-            'RELLENO PRETIL PRINCIPAL T1 4.2.1.1.2': 'PRETIL PPAL EBMN',
-            'RELLENO PLATAFORMAS 1,2,3,4,5 y 6 EBMN  5.1.2.2.2': 'PRETIL PPAL EBMN',
-            'ZAMPEADO PLATAFORMAS EBMN 1,2,3,4,5 y 6  5.1.2.2.1': 'PRETIL PPAL EBMN',
-            'RELLENO ZAMPEADO CAMINO PRETIL PRINCIPAL T1 4.2.1.1.1': 'CAMINOS ZAMPEADO',
-            'BYPASS EBMN (ZAMPEADO)': 'CAMINOS ZAMPEADO',         
-            'RELLENO AGUAS ABAJO MURO OESTE 1.4.1.3.1': 'MURO OESTE Y NO1',
-            'RELLENO AGUAS ABAJO MURO NOROESTE 1 1.3.1.2.1': 'MURO OESTE Y NO1',
-            'RELLENO MURO SUR TRAMO 1 1.5.1.4.2': 'MURO SUR',
-            'ZAMPEADO PREIL 2N-S': 'PRETIL 2 NS',
-            'Total': 'Total'
+    base_id='appOSiiFDWPc1n9hk'
+    table_id='tblEKC7vFnnSxQ8JB'
+    personal_access_token='patxqLGT8vqeIOi0S.0a930afb2c9db20d8ccfef398bbaafa7f3149a29f5c536e28aeae29f37fac516'
+    
+    def create_headers():
+        headers = {
+        'Authorization': 'Bearer ' + str(personal_access_token),
+        'Content-Type': 'application/json',
         }
+        return headers
 
-        # Crear la nueva columna 'Unidad de Negocio'
-        df['Secciones']=df['SECCION'].map(mapeo)
+    base_table_api_url = 'https://api.airtable.com/v0/{}/{}'.format(base_id, table_id)
+    headers=create_headers()
+    response = requests.get(base_table_api_url, headers=headers)
+    if response.status_code == 200:
+        # Convierte la respuesta en formato JSON a un diccionario
+        data = response.json()
+        
+        # Extrae los registros de la respuesta
+        records = data['records']
+        
+        # Crea una lista vacía para almacenar los datos de cada registro
+        rows = []
+        
+        # Recorre cada registro y extrae los datos necesarios
+        for record in records:
+            fields = record['fields']
+            rows.append(fields)
 
-        df_limpieza = df.drop("SECCION", axis=1)
-        df_limpieza = df_limpieza.groupby("Secciones").sum()
-        df_limpieza = df_limpieza.reset_index()
-
-        # Crear un nuevo dataframe con la columna 'secciones'
-        df_secciones = pd.DataFrame(df_limpieza['Secciones'])
-
-        # Calcula la media móvil de 10 días para cada sección
-        df_limpieza_media_movil = df_limpieza.iloc[:, 2:].rolling(window=10, axis=1).mean()
-
-
-        # Concatenar el nuevo dataframe con 'df_limpieza_mediamovil'
-        df_limpieza_media_movil = pd.concat([df_limpieza_media_movil, df_secciones], axis=1)
-        #st.write(df_final)
-        # Imprime el nuevo dataframe con la media móvil de 10 días
-
-        # Obtener las secciones del DataFrame
-        secciones = df_limpieza_media_movil["Secciones"].unique()
-
-        # Crear un DataFrame para los valores y las fechas
-        data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
+        # Crea el DataFrame utilizando la lista de registros
+        df = pd.DataFrame(rows)
+        
 
 
-        for seccion in secciones:
-            # Obtener los valores de la sección
-            valores = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] == seccion].iloc[:, 2:-1]
-            
-            # Convertir las fechas a formato datetime
-            fechas = valores.columns  # Las fechas ya están en el formato correcto
-            
-            # Crear un DataFrame con las fechas, valores y sección
-            temp_df = pd.DataFrame({
-                "Fecha": fechas,
-                "Metros Cúbicos Compactados": valores.values[0],
-                "Seccion": seccion
-            })
-            
-            # Agregar el DataFrame temporal al DataFrame principal
-            data = pd.concat([data, temp_df])
-            
+        # Define el orden de las columnas que deseas mantener
+        column_order = ['SECCION', 'Total/Fecha', '11/25/23', '11/26/23', '11/27/23', '11/28/23', '11/29/23', '11/30/23', '12/1/23', '12/2/23', '12/3/23', '12/4/23', '12/5/23', '12/6/23', '12/7/23', '12/8/23', '12/9/23', '12/10/23', '12/11/23', '12/12/23', '12/13/23', '12/14/23', '12/15/23', '12/16/23', '12/17/23', '12/18/23', '12/19/23', '12/20/23', '12/21/23', '12/22/23', '12/23/23', '12/24/23', '12/25/23', '12/26/23', '12/27/23', '12/28/23', '12/29/23', '12/30/23', '12/31/23', '1/1/24', '1/2/24', '1/3/24', '1/4/24', '1/5/24', '1/6/24', '1/7/24', '1/8/24', '1/9/24', '1/10/24', '1/11/24', '1/12/24', '1/13/24', '1/14/24', '1/15/24', '1/16/24', '1/17/24', '1/18/24', '1/19/24', '1/20/24', '1/21/24', '1/22/24', '1/23/24', '1/24/24', '1/25/24', '1/26/24', '1/27/24', '1/28/24', '1/29/24', '1/30/24', '1/31/24', '2/1/24', '2/2/24', '2/3/24', '2/4/24', '2/5/24', '2/6/24', '2/7/24', '2/8/24', '2/9/24', '2/10/24', '2/11/24', '2/12/24', '2/13/24', '2/14/24', '2/15/24', '2/16/24', '2/17/24', '2/18/24', '2/19/24', '2/20/24', '2/21/24', '2/22/24', '2/23/24', '2/24/24', '2/25/24', '2/26/24', '2/27/24', '2/28/24','2/29/24' ,'3/1/24', '3/2/24', '3/3/24', '3/4/24', '3/5/24', '3/6/24', '3/7/24', '3/8/24', '3/9/24', '3/10/24', '3/11/24', '3/12/24', '3/13/24', '3/14/24', '3/15/24', '3/16/24', '3/17/24', '3/18/24', '3/19/24', '3/20/24', '3/21/24', '3/22/24', '3/23/24', '3/24/24', '3/25/24', '3/26/24', '3/27/24', '3/28/24', '3/29/24', '3/30/24', '3/31/24', '4/1/24', '4/2/24', '4/3/24', '4/4/24', '4/5/24', '4/6/24', '4/7/24', '4/8/24', '4/9/24', '4/10/24', '4/11/24', '4/12/24', '4/13/24', '4/14/24','4/15/24', '4/16/24', '4/17/24', '4/18/24', '4/19/24', '4/20/24', '4/21/24', '4/22/24', '4/23/24', '4/24/24', '4/25/24', '4/26/24', '4/27/24', '4/28/24', '4/29/24', '4/30/24', '5/1/24', '5/2/24', '5/3/24', '5/4/24', '5/5/24', '5/6/24', '5/7/24', '5/8/24', '5/9/24', '5/10/24', '5/11/24', '5/12/24', '5/13/24', '5/14/24', '5/15/24', '5/16/24', '5/17/24', '5/18/24', '5/19/24', '5/20/24', '5/21/24', '5/22/24', '5/23/24', '5/24/24','5/25/24',"5/26/24", "5/27/24", "5/28/24", "5/29/24", "5/30/24", "5/31/24", "6/1/24", "6/2/24", "6/3/24", "6/4/24", "6/5/24", "6/6/24", "6/7/24", "6/8/24", "6/9/24", "6/10/24", "6/11/24", "6/12/24", "6/13/24", "6/14/24", "6/15/24", "6/16/24", "6/17/24", "6/18/24", "6/19/24", "6/20/24", "6/21/24", "6/22/24", "6/23/24", "6/24/24", "6/25/24", "6/26/24", "6/27/24", "6/28/24", "6/29/24", "6/30/24", "7/1/24", "7/2/24", "7/3/24", "7/4/24", "7/5/24", "7/6/24", "7/7/24", "7/8/24", "7/9/24", "7/10/24", "7/11/24", "7/12/24", "7/13/24", "7/14/24", "7/15/24", "7/16/24", "7/17/24", "7/18/24", "7/19/24", "7/20/24", "7/21/24", "7/22/24", "7/23/24", "7/24/24", "7/25/24", "7/26/24", "7/27/24", "7/28/24", "7/29/24", "7/30/24", "7/31/24", "8/1/24", "8/2/24", "8/3/24", "8/4/24", "8/5/24", "8/6/24", "8/7/24", "8/8/24", "8/9/24", "8/10/24", "8/11/24", "8/12/24", "8/13/24", "8/14/24", "8/15/24", "8/16/24", "8/17/24", "8/18/24", "8/19/24", "8/20/24", "8/21/24", "8/22/24", "8/23/24", "8/24/24", "8/25/24", "8/26/24", "8/27/24", "8/28/24", "8/29/24", "8/30/24", "8/31/24", "9/1/24", "9/2/24", "9/3/24", "9/4/24", "9/5/24", "9/6/24", "9/7/24", "9/8/24", "9/9/24", "9/10/24", "9/11/24", "9/12/24", "9/13/24", "9/14/24", "9/15/24", "9/16/24", "9/17/24", "9/18/24", "9/19/24", "9/20/24", "9/21/24", "9/22/24", "9/23/24", "9/24/24", "9/25/24", "9/26/24", "9/27/24", "9/28/24", "9/29/24", "9/30/24", "10/1/24", "10/2/24", "10/3/24", "10/4/24", "10/5/24", "10/6/24", "10/7/24", "10/8/24", "10/9/24", "10/10/24", "10/11/24", "10/12/24", "10/13/24", "10/14/24", "10/15/24", "10/16/24", "10/17/24", "10/18/24", "10/19/24", "10/20/24", "10/21/24", "10/22/24", "10/23/24", "10/24/24", "10/25/24", "10/26/24", "10/27/24", "10/28/24", "10/29/24", "10/30/24", "10/31/24", "11/1/24", "11/2/24", "11/3/24", "11/4/24", "11/5/24", "11/6/24", "11/7/24", "11/8/24", "11/9/24", "11/10/24", "11/11/24", "11/12/24", "11/13/24", "11/14/24", "11/15/24", "11/16/24", "11/17/24", "11/18/24", "11/19/24", "11/20/24", "11/21/24", "11/22/24", "11/23/24", "11/24/24", "11/25/24", "11/26/24", "11/27/24", "11/28/24", "11/29/24", "11/30/24", "12/1/24", "12/2/24", "12/3/24", "12/4/24", "12/5/24", "12/6/24", "12/7/24", "12/8/24", "12/9/24", "12/10/24", "12/11/24", "12/12/24", "12/13/24", "12/14/24", "12/15/24", "12/16/24", "12/17/24", "12/18/24", "12/19/24", "12/20/24", "12/21/24", "12/22/24", "12/23/24", "12/24/24", "12/25/24", "12/26/24", "12/27/24", "12/28/24", "12/29/24", "12/30/24", "12/31/24", "1/1/25", "1/2/25", "1/3/25", "1/4/25", "1/5/25", "1/6/25", "1/7/25", "1/8/25", "1/9/25", "1/10/25", "1/11/25", "1/12/25", "1/13/25", "1/14/25", "1/15/25", "1/16/25", "1/17/25", "1/18/25", "1/19/25", "1/20/25", "1/21/25", "1/22/25", "1/23/25", "1/24/25", "1/25/25", "1/26/25", "1/27/25", "1/28/25", "1/29/25", "1/30/25", "1/31/25", "2/1/25", "2/2/25", "2/3/25", "2/4/25", "2/5/25", "2/6/25", "2/7/25", "2/8/25", "2/9/25", "2/10/25", "2/11/25", "2/12/25", "2/13/25", "2/14/25", "2/15/25", "2/16/25", "2/17/25", "2/18/25", "2/19/25", "2/20/25", "2/21/25", "2/22/25", "2/23/25", "2/24/25", "2/25/25", "2/26/25", "2/27/25", "2/28/25", "3/1/25", "3/2/25", "3/3/25", "3/4/25", "3/5/25", "3/6/25", "3/7/25", "3/8/25", "3/9/25", "3/10/25", "3/11/25", "3/12/25", "3/13/25", "3/14/25", "3/15/25", "3/16/25", "3/17/25", "3/18/25", "3/19/25", "3/20/25", "3/21/25", "3/22/25", "3/23/25", "3/24/25", "3/25/25", "3/26/25", "3/27/25", "3/28/25", "3/29/25", "3/30/25", "3/31/25", "4/1/25", "4/2/25", "4/3/25", "4/4/25", "4/5/25", "4/6/25", "4/7/25", "4/8/25", "4/9/25", "4/10/25", "4/11/25", "4/12/25", "4/13/25", "4/14/25", "4/15/25", "4/16/25", "4/17/25", "4/18/25", "4/19/25", "4/20/25", "4/21/25", "4/22/25", "4/23/25", "4/24/25", "4/25/25", "4/26/25", "4/27/25", "4/28/25", "4/29/25", "4/30/25", "5/1/25", "5/2/25", "5/3/25", "5/4/25", "5/5/25", "5/6/25", "5/7/25", "5/8/25", "5/9/25", "5/10/25", "5/11/25", "5/12/25", "5/13/25", "5/14/25", "5/15/25", "5/16/25", "5/17/25", "5/18/25", "5/19/25", "5/20/25", "5/21/25", "5/22/25", "5/23/25", "5/24/25", "5/25/25", "5/26/25", "5/27/25", "5/28/25", "5/29/25", "5/30/25", "5/31/25", "6/1/25", "6/2/25", "6/3/25", "6/4/25", "6/5/25", "6/6/25", "6/7/25", "6/8/25", "6/9/25", "6/10/25", "6/11/25", "6/12/25", "6/13/25", "6/14/25", "6/15/25", "6/16/25", "6/17/25", "6/18/25", "6/19/25", "6/20/25", "6/21/25", "6/22/25", "6/23/25", "6/24/25", "6/25/25", "6/26/25", "6/27/25", "6/28/25", "6/29/25", "6/30/25", "7/1/25", "7/2/25", "7/3/25", "7/4/25", "7/5/25", "7/6/25", "7/7/25", "7/8/25", "7/9/25", "7/10/25", "7/11/25", "7/12/25", "7/13/25", "7/14/25", "7/15/25", "7/16/25", "7/17/25", "7/18/25", "7/19/25", "7/20/25", "7/21/25", "7/22/25", "7/23/25", "7/24/25", "7/25/25", "7/26/25", "7/27/25", "7/28/25", "7/29/25", "7/30/25", "7/31/25", "8/1/25", "8/2/25", "8/3/25", "8/4/25", "8/5/25", "8/6/25", "8/7/25", "8/8/25", "8/9/25", "8/10/25", "8/11/25", "8/12/25", "8/13/25", "8/14/25", "8/15/25", "8/16/25", "8/17/25", "8/18/25", "8/19/25", "8/20/25", "8/21/25", "8/22/25", "8/23/25", "8/24/25", "8/25/25", "8/26/25", "8/27/25", "8/28/25", "8/29/25", "8/30/25", "8/31/25", "9/1/25", "9/2/25", "9/3/25", "9/4/25", "9/5/25", "9/6/25", "9/7/25", "9/8/25", "9/9/25", "9/10/25", "9/11/25", "9/12/25", "9/13/25", "9/14/25", "9/15/25", "9/16/25", "9/17/25", "9/18/25", "9/19/25", "9/20/25", "9/21/25", "9/22/25", "9/23/25", "9/24/25", "9/25/25", "9/26/25", "9/27/25", "9/28/25", "9/29/25", "9/30/25", "10/1/25", "10/2/25", "10/3/25", "10/4/25", "10/5/25", "10/6/25", "10/7/25", "10/8/25", "10/9/25", "10/10/25", "10/11/25", "10/12/25", "10/13/25", "10/14/25", "10/15/25", "10/16/25", "10/17/25", "10/18/25", "10/19/25", "10/20/25", "10/21/25", "10/22/25", "10/23/25", "10/24/25", "10/25/25", "10/26/25", "10/27/25", "10/28/25", "10/29/25", "10/30/25", "10/31/25", "11/1/25", "11/2/25", "11/3/25", "11/4/25", "11/5/25", "11/6/25", "11/7/25", "11/8/25", "11/9/25", "11/10/25", "11/11/25", "11/12/25", "11/13/25", "11/14/25", "11/15/25", "11/16/25", "11/17/25", "11/18/25", "11/19/25", "11/20/25", "11/21/25", "11/22/25", "11/23/25", "11/24/25", "11/25/25", "11/26/25", "11/27/25", "11/28/25", "11/29/25", "11/30/25", "12/1/25", "12/2/25", "12/3/25", "12/4/25", "12/5/25", "12/6/25", "12/7/25", "12/8/25", "12/9/25", "12/10/25", "12/11/25", "12/12/25", "12/13/25", "12/14/25", "12/15/25", "12/16/25", "12/17/25", "12/18/25", "12/19/25", "12/20/25", "12/21/25", "12/22/25", "12/23/25", "12/24/25", "12/25/25", "12/26/25", "12/27/25"]
+
+        # Reindexa el DataFrame utilizando el orden de las columnas
+        df = df.reindex(columns=column_order)
+    fecha_actual = np.datetime64(datetime.now().date())
+    mapeo = {
+        'ZAMPEADO PRETIL PRINCIPAL T3 4.2.1.1.1': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2 INTERNO': 'PRETIL PPAL EBMN',
+        'ZAMPEADO PRETIL CONTORNO (ANILLO) EBMN 5.1.2.3.1': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL CONTORNO (ANILLO) EBMN  5.1.2.3.2': 'PRETIL PPAL EBMN',
+        'ZAMPEADO PRETIL PRINCIPAL T1 4.2.1.1.1': 'PRETIL PPAL EBMN',
+        'RELLENO PRETIL PRINCIPAL T1 4.2.1.1.2': 'PRETIL PPAL EBMN',
+        'RELLENO PLATAFORMAS 1,2,3,4,5 y 6 EBMN  5.1.2.2.2': 'PRETIL PPAL EBMN',
+        'ZAMPEADO PLATAFORMAS EBMN 1,2,3,4,5 y 6  5.1.2.2.1': 'PRETIL PPAL EBMN',
+        'RELLENO ZAMPEADO CAMINO PRETIL PRINCIPAL T1 4.2.1.1.1': 'CAMINOS ZAMPEADO',
+        'BYPASS EBMN (ZAMPEADO)': 'CAMINOS ZAMPEADO',         
+        'RELLENO AGUAS ABAJO MURO OESTE 1.4.1.3.1': 'MURO OESTE Y NO 1',
+        'RELLENO AGUAS ABAJO MURO NOROESTE 1 1.3.1.2.1': 'MURO OESTE Y NO 1',
+        'RELLENO MURO SUR TRAMO 1 1.5.1.4.2': 'MURO SUR',
+        'ZAMPEADO PREIL 2N-S': 'PRETIL 2 NS',
+        'Total': 'Total'
+    }
+
+    # Crear la nueva columna 'Unidad de Negocio'
+    df['Secciones']=df['SECCION'].map(mapeo)
     
 
-        # Convertir la columna de fechas a tipo datetime
-        data["Fecha"] = pd.to_datetime(data["Fecha"])
-        # Restar un día a las fechas
-        fechas_ayer = fecha_actual - np.timedelta64(1, 'D')
-        data = data[data["Fecha"] <= fechas_ayer]
 
-        # Definir los colores deseados
+    df_limpieza = df.drop("SECCION", axis=1)
+    df_limpieza = df_limpieza.groupby("Secciones").sum()
+    df_limpieza = df_limpieza.reset_index()
 
-        # Definir los colores para las rectas
-        colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
+    # Crear un nuevo dataframe con la columna 'secciones'
+    df_secciones = pd.DataFrame(df_limpieza['Secciones'])
 
-        # Graficar los valores utilizando plotly
-        fig = px.line(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Media Móvil 10 días")
+    # Calcula la media móvil de 10 días para cada sección
+    df_limpieza_media_movil = df_limpieza.iloc[:, 2:].rolling(window=10, axis=1).mean()
 
-        # Modificar el color de las rectas
-        for i, color in enumerate(colores):
-            fig.data[i].line.color = color
 
-        # Añadir una recta para el valor 3000
-        fig.add_trace(go.Scatter(x=data["Fecha"], y=[3000] * len(data), mode="lines", name="Meta Diaria Frentes", line_color="#209eb0"))
-        # Añadir una recta para el valor 15000
-        fig.add_trace(go.Scatter(x=data["Fecha"], y=[15000] * len(data), mode="lines", name="Meta Diaria Total", line_color="#bb5726"))
+    # Concatenar el nuevo dataframe con 'df_limpieza_mediamovil'
+    df_limpieza_media_movil = pd.concat([df_limpieza_media_movil, df_secciones], axis=1)
+    #st.write(df_final)
+    # Imprime el nuevo dataframe con la media móvil de 10 días
 
-        fig.update_layout(width=900, height=500)
-        st.plotly_chart(fig)
-        # Obtener las secciones del DataFrame
-        secciones = df_limpieza_media_movil["Secciones"].unique()
+    # Obtener las secciones del DataFrame
+    secciones = df_limpieza_media_movil["Secciones"].unique()
 
-        # Crear un DataFrame para los valores y las fechas
-        data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
+    # Crear un DataFrame para los valores y las fechas
+    data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
+    lista_fecha=[]
 
-        # Obtener los valores y las fechas para cada sección
-        for seccion in secciones:
-            # Obtener los valores de la sección
-            valores = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] == seccion].iloc[:, 2:-1]
-            
-            # Convertir las fechas a formato datetime
-            fechas = valores.columns  # Las fechas ya están en el formato correcto
-            
-            # Crear un DataFrame con las fechas, valores y sección
-            temp_df = pd.DataFrame({
-                "Fecha": fechas,
-                "Metros Cúbicos Compactados": valores.values[0],
-                "Seccion": seccion
-            })
-            
-            # Agregar el DataFrame temporal al DataFrame principal
-            data = pd.concat([data, temp_df])
-
-        # Convertir la columna de fechas a tipo datetime
-        data["Fecha"] = pd.to_datetime(data["Fecha"])
-        data = data[data["Fecha"] <= fechas_ayer]
-        data_total = data[data['Seccion'] == 'Total']
-        data = data[data['Seccion'] != 'Total']
-        
-
-        df_total = df_limpieza[df_limpieza["Secciones"] == "Total"]
-
-        #PRUEBA
-        valores = df_total[df_total["Secciones"] == seccion].iloc[:, 2:-1]
+    for seccion in secciones:
+        # Obtener los valores de la sección
+        valores = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] == seccion].iloc[:, 2:-1]
         
         # Convertir las fechas a formato datetime
         fechas = valores.columns  # Las fechas ya están en el formato correcto
@@ -1411,41 +1650,123 @@ if funcion== "Análisis Excel Avance IX Etapa":
             "Metros Cúbicos Compactados": valores.values[0],
             "Seccion": seccion
         })
-        import plotly.graph_objects as go
+        ultima_fecha = temp_df[temp_df["Metros Cúbicos Compactados"] != 0]["Fecha"].max()
 
         # Agregar el DataFrame temporal al DataFrame principal
-        data_total = temp_df
-        data_total["Fecha"] = pd.to_datetime(data_total["Fecha"])
-        data_total = data_total[data_total["Fecha"] <= fechas_ayer]
-        #PRUEBA
-        fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"])
-        # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
-        # Crear el trace adicional utilizando go.Scatter() y asignarle un nombre para la leyenda
-        scatter_trace = go.Scatter(
-            x=data_total["Fecha"],
-            y=data_total["Metros Cúbicos Compactados"],
-            mode="markers",
-            marker=dict(
-                symbol="x",  # Cambia la forma de los puntos a cuadrados
-                size=5,  # Cambia el tamaño de los puntos
-                color="black"  # Cambia el color de los puntos
-            ),
-            name="Relleno Total Diario"
-        )
-        # Agregar el trace adicional al gráfico de barras
-        fig.add_trace(scatter_trace)
+        data = pd.concat([data, temp_df])
+        lista_fecha.append(ultima_fecha)
 
-        fig.update_layout(width=900, height=500)
+    lista_fecha = max(lista_fecha)
+    
+    lista_fecha=pd.to_datetime(lista_fecha)
+    
+    
 
-        # Mostrar el gráfico
-        st.plotly_chart(fig)
-        #Tablas que pidió Camilo Sacar 
-        #st.markdown("**Producción Agrupada por Sección**")
-        #st.write(df_limpieza)
-        #st.markdown("**Media Movil**")
-        #st.write(df_limpieza_media_movil)
+    # Convertir la columna de fechas a tipo datetime
+    data["Fecha"] = pd.to_datetime(data["Fecha"])
+    # Restar un día a las fechas
+    fechas_ayer = fecha_actual - np.timedelta64(1, 'D')
+    
+    data = data[data["Fecha"] <= fechas_ayer]
+
+    # Definir los colores deseados
+
+    # Definir los colores para las rectas
+    colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
+
+    # Graficar los valores utilizando plotly
+    fig = px.line(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Media Móvil 10 días")
+
+    # Modificar el color de las rectas
+    for i, color in enumerate(colores):
+        fig.data[i].line.color = color
+
+    # Añadir una recta para el valor 3000
+    fig.add_trace(go.Scatter(x=data["Fecha"], y=[3000] * len(data), mode="lines", name="Meta Diaria Frentes", line_color="#209eb0"))
+    # Añadir una recta para el valor 15000
+    fig.add_trace(go.Scatter(x=data["Fecha"], y=[15000] * len(data), mode="lines", name="Meta Diaria Total", line_color="#bb5726"))
+
+    fig.update_layout(width=900, height=500)
+    st.plotly_chart(fig)
+    # Obtener las secciones del DataFrame
+    secciones = df_limpieza_media_movil["Secciones"].unique()
+
+    # Crear un DataFrame para los valores y las fechas
+    data = pd.DataFrame(columns=["Fecha", "Metros Cúbicos Compactados", "Seccion"])
+
+    # Obtener los valores y las fechas para cada sección
+    for seccion in secciones:
+        # Obtener los valores de la sección
+        valores = df_limpieza_media_movil[df_limpieza_media_movil["Secciones"] == seccion].iloc[:, 2:-1]
+        
+        # Convertir las fechas a formato datetime
+        fechas = valores.columns  # Las fechas ya están en el formato correcto
+        
+        # Crear un DataFrame con las fechas, valores y sección
+        temp_df = pd.DataFrame({
+            "Fecha": fechas,
+            "Metros Cúbicos Compactados": valores.values[0],
+            "Seccion": seccion
+        })
+        
+        # Agregar el DataFrame temporal al DataFrame principal
+        data = pd.concat([data, temp_df])
+
+    # Convertir la columna de fechas a tipo datetime
+    data["Fecha"] = pd.to_datetime(data["Fecha"])
+    data = data[data["Fecha"] <= fechas_ayer]
+    data_total = data[data['Seccion'] == 'Total']
+    data = data[data['Seccion'] != 'Total']
+    
+
+    df_total = df_limpieza[df_limpieza["Secciones"] == "Total"]
+
+    #PRUEBA
+    valores = df_total[df_total["Secciones"] == seccion].iloc[:, 2:-1]
+    
+    # Convertir las fechas a formato datetime
+    fechas = valores.columns  # Las fechas ya están en el formato correcto
+    
+    # Crear un DataFrame con las fechas, valores y sección
+    temp_df = pd.DataFrame({
+        "Fecha": fechas,
+        "Metros Cúbicos Compactados": valores.values[0],
+        "Seccion": seccion
+    })
+    import plotly.graph_objects as go
+
+    # Agregar el DataFrame temporal al DataFrame principal
+    data_total = temp_df
+    data_total["Fecha"] = pd.to_datetime(data_total["Fecha"])
+    data_total = data_total[data_total["Fecha"] <= fechas_ayer]
+    #PRUEBA
+    fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"])
+    # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
+    # Crear el trace adicional utilizando go.Scatter() y asignarle un nombre para la leyenda
+    scatter_trace = go.Scatter(
+        x=data_total["Fecha"],
+        y=data_total["Metros Cúbicos Compactados"],
+        mode="markers",
+        marker=dict(
+            symbol="x",  # Cambia la forma de los puntos a cuadrados
+            size=5,  # Cambia el tamaño de los puntos
+            color="black"  # Cambia el color de los puntos
+        ),
+        name="Relleno Total Diario"
+    )
+    # Agregar el trace adicional al gráfico de barras
+    fig.add_trace(scatter_trace)
+
+    fig.update_layout(width=900, height=500)
 
 
-    else:
-        # Si la respuesta de la API no fue exitosa, muestra un mensaje de error
-        st.write('Error al obtener los datos de la API')        
+    # Mostrar el gráfico
+    st.plotly_chart(fig)
+    #Tablas que pidió Camilo Sacar 
+    #st.markdown("**Producción Agrupada por Sección**")
+    #st.write(df_limpieza)
+    #st.markdown("**Media Movil**")
+    #st.write(df_limpieza_media_movil)
+
+
+    
