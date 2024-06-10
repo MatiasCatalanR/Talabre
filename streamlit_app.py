@@ -482,7 +482,11 @@ if funcion=="Reporte Inicio-Término Turno":
         fin_carga_df = pd.DataFrame(fin_carga)
         # Elimina las filas donde alguna columna es None
         turno_diurno_df = turno_diurno_df.dropna()
-
+        turno_diurno_it=turno_diurno_df
+        # Filtrar el DataFrame por el rango de horas
+        turno_diurno_df = turno_diurno_df[(turno_diurno_df['inicio_turno'] >= time(8, 15, 0)) & (turno_diurno_df['inicio_turno'] <= time(11, 0, 0))]
+        fin_turno_diurno_df = turno_diurno_it[(turno_diurno_it['fin_turno'] >= time(17, 0, 0)) & (turno_diurno_it['fin_turno'] <= time(20, 0, 0))]
+        
 
 
         # Convertir 'inicio_turno' a segundos
@@ -512,7 +516,7 @@ if funcion=="Reporte Inicio-Término Turno":
         minimo = str(timedelta(seconds=int(minimo_segundos)))
         maximo = str(timedelta(seconds=int(maximo_segundos)))
         dsv = str(timedelta(seconds=int(dsv_segundos))) 
-        col1, col2,col3,col4=st.columns(4)
+        col1, col5,col2,col3,col4=st.columns(5)
         # Convertir 'inicio_diurno' a segundos
         inicio_diurno_segundos = inicio_diurno.hour * 3600 + inicio_diurno.minute * 60 + inicio_diurno.second
 
@@ -621,13 +625,42 @@ if funcion=="Reporte Inicio-Término Turno":
             st.markdown(f'<div style="color: green; font-size: medium; padding: 10px; background-color: lightgreen; border-radius: 10px;">Primer Camión: {minimo}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="color: red; font-size: medium; padding: 10px; background-color: lightcoral; border-radius: 10px;">Último Camión: {maximo}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="color: orange; font-size: medium; padding: 10px; background-color: lightyellow; border-radius: 10px;">Desviación Estándar: {dsv}</div>', unsafe_allow_html=True)
-            fin_cargas_df=fin_carga_df[['fecha','patente','fin_carga']].copy()
+            fin_cargas_df=fin_carga_df[['fecha','patente','fin_carga']]
 
             st.write(fin_cargas_df)
+        #inicio carga
+        fin_turno_diurno_df['fin_turno_segundos'] = fin_turno_diurno_df['fin_turno'].apply(lambda x: x.hour * 3600 + x.minute * 60 + x.second)
+        #st.write(df_carguio)
+        promedio_segundos =fin_turno_diurno_df['fin_turno_segundos'].mean()
+        minimo_segundos = fin_turno_diurno_df['fin_turno_segundos'].min()
+        maximo_segundos = fin_turno_diurno_df['fin_turno_segundos'].max() 
+        dsv_segundos = fin_turno_diurno_df['fin_turno_segundos'].std()    
+        # Convertir los segundos de vuelta a formato de hora
+        promedio = str(np.timedelta64(int(promedio_segundos), 's'))
+        minimo = str(np.timedelta64(int(minimo_segundos), 's'))
+        maximo = str(np.timedelta64(int(maximo_segundos), 's'))
+        dsv = str(np.timedelta64(int(dsv_segundos), 's'))
+        # Convertir los segundos de vuelta a formato de hora
+        promedio = str(timedelta(seconds=int(promedio_segundos)))
+        minimo = str(timedelta(seconds=int(minimo_segundos)))
+        maximo = str(timedelta(seconds=int(maximo_segundos))) 
+        dsv = str(timedelta(seconds=int(dsv_segundos)))
+        diferencia_segundos = promedio_segundos - inicio_diurno_segundos
+        diferencia = str(timedelta(seconds=int(abs(diferencia_segundos))))
+        with col5:
+            st.header("Fin Turno")
+            st.markdown(f'<div style="color: blue; font-size: medium; padding: 10px; background-color: lightblue; border-radius: 10px;">Promedio: {promedio} </div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color: red; font-size: medium; padding: 10px; background-color: lightcoral; border-radius: 10px;">Primer Camión: {minimo}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color: green; font-size: medium; padding: 10px; background-color: lightgreen; border-radius: 10px;">Último Camión: {maximo}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color: orange; font-size: medium; padding: 10px; background-color: lightyellow; border-radius: 10px;">Desviación Estándar: {dsv}</div>', unsafe_allow_html=True)
+            #fin_cargas_df=fin_turno_diurno_df[['fecha','patente','fin_turno']].copy()
+            fin_turno_diurno_df=fin_turno_diurno_df[['fecha','patente','fin_turno']]
+            st.write(fin_turno_diurno_df)
         entrada_carguio_df['entrada_carguio']=entrada_carguio_df['entrada_carguio'].dt.time
         inicio_carga_df['inicio_carga']=inicio_carga_df['inicio_carga'].dt.time
         
         fin_carga_df['fin_carga']=fin_carga_df['fin_carga'].dt.time
+        
 
 
         # Supongamos que ya tienes los DataFrames turno_diurno_df, entrada_carguio_df y fin_carga_df cargados con los datos
