@@ -1059,12 +1059,13 @@ if funcion== "MDG 2024":
     import pandas as pd
     from datetime import timedelta
     import streamlit as st
-
+    fecha_actual = np.datetime64(datetime.now().date())
+    fecha_actual
     # Crear DataFrame con los datos de los muros y las cantidades diarias depositadas
     muros = ['MURO OESTE Y NO 1', 'MURO SUR', 'PRETIL 2 NS', 'PRETIL PPAL EBMN', 'MURO NORTE']
-
+    
     # Crear rango de fechas desde el 5 de junio hasta el 31 de diciembre
-    fechas = pd.date_range(start='2024-06-05', end='2024-12-31')
+    fechas = pd.date_range(start=fecha_actual, end='2024-12-31')
 
     # Crear un DataFrame con una fila para cada combinación de fecha y muro
     df_p = pd.DataFrame([(fecha, muro, 3000) for fecha in fechas for muro in muros], columns=['Fecha', 'Muro', 'Cantidad Diaria'])
@@ -1125,7 +1126,6 @@ if funcion== "MDG 2024":
 
         # Reindexa el DataFrame utilizando el orden de las columnas
         df = df.reindex(columns=column_order)
-    fecha_actual = np.datetime64(datetime.now().date())
     mapeo = {
         'ZAMPEADO PRETIL PRINCIPAL T3 4.2.1.1.1': 'PRETIL PPAL EBMN',
         'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2': 'PRETIL PPAL EBMN',
@@ -1202,7 +1202,7 @@ if funcion== "MDG 2024":
     # Convertir la columna de fechas a tipo datetime
     data["Fecha"] = pd.to_datetime(data["Fecha"])
     # Restar un día a las fechas
-    fechas_ayer = fecha_actual - np.timedelta64(1, 'D')
+    fechas_ayer = fecha_actual - np.timedelta64(2                                                                                                                                                                                 , 'D')
     
     data = data[data["Fecha"] <= fechas_ayer]
 
