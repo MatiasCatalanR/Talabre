@@ -1794,7 +1794,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
     # Mostrar el gráfico
     st.plotly_chart(fig)
     col2,col3=st.columns(2)
-    col2.metric(label="Acumulado Histórico",value=suma_actual)
+    col2.metric(label="m³ Geométricos Acumulados",value=str(suma_actual))
     style_metric_cards()
     #col2.metric(label="Acumulado Histórico",value=suma_actual,delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
 
