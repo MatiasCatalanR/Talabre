@@ -63,7 +63,7 @@ image_bytes = buf.getvalue()
 st.sidebar.markdown("<hr style='border:2.5px solid white'> </hr>", unsafe_allow_html=True)
 
 st.sidebar.markdown("<h1 style='text-align: left; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
-funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","Transgresiones Históricas","Programación Rellenos","MDG 2024"])
+funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","En Desarrollo 1","En Desarrollo 2"])
 
 url_despacho='https://icons8.com/icon/21183/in-transit'
 
@@ -1051,21 +1051,22 @@ if funcion=="Programación Rellenos":
     chart
 
 
-if funcion== "MDG 2024":
+if funcion== "En Desarrollo 1":
 
-    st.title("📚 MDG 2024")
+    st.title("📚 MDG 2024 (En Desarrollo)")
         # Crear DataFrame con los datos de los muros y las cantidades diarias depositadas
     import plotly.express as px
     import pandas as pd
     from datetime import timedelta
     import streamlit as st
     fecha_actual = np.datetime64(datetime.now().date())
-    fecha_actual
+    
     # Crear DataFrame con los datos de los muros y las cantidades diarias depositadas
     muros = ['MURO OESTE Y NO 1', 'MURO SUR', 'PRETIL 2 NS', 'PRETIL PPAL EBMN', 'MURO NORTE']
     
     # Crear rango de fechas desde el 5 de junio hasta el 31 de diciembre
     fechas = pd.date_range(start=fecha_actual, end='2024-12-31')
+
 
     # Crear un DataFrame con una fila para cada combinación de fecha y muro
     df_p = pd.DataFrame([(fecha, muro, 3000) for fecha in fechas for muro in muros], columns=['Fecha', 'Muro', 'Cantidad Diaria'])
@@ -1126,6 +1127,7 @@ if funcion== "MDG 2024":
 
         # Reindexa el DataFrame utilizando el orden de las columnas
         df = df.reindex(columns=column_order)
+        
     mapeo = {
         'ZAMPEADO PRETIL PRINCIPAL T3 4.2.1.1.1': 'PRETIL PPAL EBMN',
         'RELLENO PRETIL PRINCIPAL T3 4.2.1.1.2': 'PRETIL PPAL EBMN',
@@ -1140,19 +1142,34 @@ if funcion== "MDG 2024":
         'BYPASS EBMN (ZAMPEADO)': 'CAMINOS ZAMPEADO',         
         'RELLENO AGUAS ABAJO MURO OESTE 1.4.1.3.1': 'MURO OESTE Y NO 1',
         'RELLENO AGUAS ABAJO MURO NOROESTE 1 1.3.1.2.1': 'MURO OESTE Y NO 1',
-        'RELLENO MURO SUR TRAMO 1 1.5.1.4.2': 'MURO SUR',
-        'ZAMPEADO PREIL 2N-S': 'PRETIL 2 NS',
+        'RELLENO MURO SUR TRAMO 1 1.5.1.3.1': 'MURO SUR',
+        'ZAMPEADO PRETIL 2N-S 4.1.1.1.1': 'PRETIL 2 NS',
+        'RELLENO PRETIL 2N-S':'PRETIL 2 NS',
         'Total': 'Total'
     }
-
+    
     # Crear la nueva columna 'Unidad de Negocio'
     df['Secciones']=df['SECCION'].map(mapeo)
     
+    # Definir la función para aplicar el factor de multiplicación
+    def apply_factor(x):
+        return (x * 14) / 20
 
+    # Aplicar el factor de multiplicación a las columnas seleccionadas
+    fechas_factor=['11/25/23', '11/26/23', '11/27/23', '11/28/23', '11/29/23', '11/30/23', '12/1/23', '12/2/23', '12/3/23', '12/4/23', '12/5/23', '12/6/23', '12/7/23', '12/8/23', '12/9/23', '12/10/23', '12/11/23', '12/12/23', '12/13/23', '12/14/23', '12/15/23', '12/16/23', '12/17/23', '12/18/23', '12/19/23', '12/20/23', '12/21/23', '12/22/23', '12/23/23', '12/24/23', '12/25/23', '12/26/23', '12/27/23', '12/28/23', '12/29/23', '12/30/23', '12/31/23', '1/1/24', '1/2/24', '1/3/24', '1/4/24', '1/5/24', '1/6/24', '1/7/24', '1/8/24', '1/9/24', '1/10/24', '1/11/24', '1/12/24', '1/13/24', '1/14/24', '1/15/24', '1/16/24', '1/17/24', '1/18/24', '1/19/24', '1/20/24', '1/21/24', '1/22/24', '1/23/24', '1/24/24', '1/25/24', '1/26/24', '1/27/24', '1/28/24', '1/29/24', '1/30/24', '1/31/24', '2/1/24', '2/2/24', '2/3/24', '2/4/24', '2/5/24', '2/6/24', '2/7/24', '2/8/24', '2/9/24', '2/10/24', '2/11/24', '2/12/24', '2/13/24']
+
+    df[fechas_factor] = df[fechas_factor].apply(apply_factor)        
 
     df_limpieza = df.drop("SECCION", axis=1)
     df_limpieza = df_limpieza.groupby("Secciones").sum()
     df_limpieza = df_limpieza.reset_index()
+
+    df_total = df_limpieza.loc[df_limpieza['Secciones'] == 'Total']
+    columnas_suma = df_total.columns[2:]
+    suma_total = df_total[columnas_suma].sum()
+    suma_total_historica=suma_total.sum()
+
+
 
     # Crear un nuevo dataframe con la columna 'secciones'
     df_secciones = pd.DataFrame(df_limpieza['Secciones'])
@@ -1307,8 +1324,6 @@ if funcion== "MDG 2024":
 
     # Crear un DataFrame con una fila para cada combinación de fecha y muro
     suma_proyectado=df_p['Cantidad Diaria'].sum()
-    suma_actual=df_limpieza['Total/Fecha'][4]
-    suma_diciembre=int(suma_actual)+int(suma_proyectado)
     style_metric_cards()
 
 
@@ -1321,11 +1336,13 @@ if funcion== "MDG 2024":
 
     # Definir los colores personalizados
     colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
-
+    df_graf = df_p.rename(columns={'Muro': 'Seccion'})
+    df_graf = df_graf.rename(columns={'Cantidad Diaria': 'Metros Cúbicos Compactados'})
+    df_graf = pd.concat([df_graf, data])
     # Crear gráfico de barras apiladas utilizando Plotly Express
     fig1 = px.bar(df_p, x='Fecha', y='Cantidad Diaria', color='Muro', barmode='stack', color_discrete_sequence=colores)
     fig1.update_layout(title='Depósito Diario en Muros Actual-Requerido', xaxis_title='Fecha', yaxis_title='Media Móvil 10 días(m³)')
-
+    
     # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
     scatter_trace = go.Scatter(
         x=data_total["Fecha"],
@@ -1350,7 +1367,8 @@ if funcion== "MDG 2024":
     fig1.update_layout(width=900, height=500)
     st.plotly_chart(fig1)
     col1, col2,col3=st.columns(3)
-
+    suma_actual=int(suma_total_historica)
+    suma_diciembre=int(suma_actual)+int(suma_proyectado)
 
     col1.metric(label="Esperado a diciembre",value=suma_diciembre,delta=str(round(suma_diciembre/2600000*100,1))+"% del MDG")
     col2.metric(label="Acumulado Histórico",value=suma_actual,delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
@@ -1604,20 +1622,32 @@ if funcion== "Análisis Excel Avance IX Etapa":
         'BYPASS EBMN (ZAMPEADO)': 'CAMINOS ZAMPEADO',         
         'RELLENO AGUAS ABAJO MURO OESTE 1.4.1.3.1': 'MURO OESTE Y NO 1',
         'RELLENO AGUAS ABAJO MURO NOROESTE 1 1.3.1.2.1': 'MURO OESTE Y NO 1',
-        'RELLENO MURO SUR TRAMO 1 1.5.1.4.2': 'MURO SUR',
-        'ZAMPEADO PREIL 2N-S': 'PRETIL 2 NS',
+        'RELLENO MURO SUR TRAMO 1 1.5.1.3.1': 'MURO SUR',
+        'ZAMPEADO PRETIL 2N-S 4.1.1.1.1': 'PRETIL 2 NS',
+        'RELLENO PRETIL 2N-S':'PRETIL 2 NS',
         'Total': 'Total'
     }
-
     # Crear la nueva columna 'Unidad de Negocio'
     df['Secciones']=df['SECCION'].map(mapeo)
-    
+    # Definir la función para aplicar el factor de multiplicación
+    def apply_factor(x):
+        return (x * 14) / 20
+
+    # Aplicar el factor de multiplicación a las columnas seleccionadas
+    fechas_factor=['11/25/23', '11/26/23', '11/27/23', '11/28/23', '11/29/23', '11/30/23', '12/1/23', '12/2/23', '12/3/23', '12/4/23', '12/5/23', '12/6/23', '12/7/23', '12/8/23', '12/9/23', '12/10/23', '12/11/23', '12/12/23', '12/13/23', '12/14/23', '12/15/23', '12/16/23', '12/17/23', '12/18/23', '12/19/23', '12/20/23', '12/21/23', '12/22/23', '12/23/23', '12/24/23', '12/25/23', '12/26/23', '12/27/23', '12/28/23', '12/29/23', '12/30/23', '12/31/23', '1/1/24', '1/2/24', '1/3/24', '1/4/24', '1/5/24', '1/6/24', '1/7/24', '1/8/24', '1/9/24', '1/10/24', '1/11/24', '1/12/24', '1/13/24', '1/14/24', '1/15/24', '1/16/24', '1/17/24', '1/18/24', '1/19/24', '1/20/24', '1/21/24', '1/22/24', '1/23/24', '1/24/24', '1/25/24', '1/26/24', '1/27/24', '1/28/24', '1/29/24', '1/30/24', '1/31/24', '2/1/24', '2/2/24', '2/3/24', '2/4/24', '2/5/24', '2/6/24', '2/7/24', '2/8/24', '2/9/24', '2/10/24', '2/11/24', '2/12/24', '2/13/24']
+
+    df[fechas_factor] = df[fechas_factor].apply(apply_factor)        
 
 
     df_limpieza = df.drop("SECCION", axis=1)
     df_limpieza = df_limpieza.groupby("Secciones").sum()
     df_limpieza = df_limpieza.reset_index()
-
+    
+    df_total = df_limpieza.loc[df_limpieza['Secciones'] == 'Total']
+    columnas_suma = df_total.columns[2:]
+    suma_total = df_total[columnas_suma].sum()
+    suma_actual=int(suma_total.sum())
+    
     # Crear un nuevo dataframe con la columna 'secciones'
     df_secciones = pd.DataFrame(df_limpieza['Secciones'])
 
@@ -1740,6 +1770,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
     data_total["Fecha"] = pd.to_datetime(data_total["Fecha"])
     data_total = data_total[data_total["Fecha"] <= fechas_ayer]
     #PRUEBA
+    
     fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Medias Móviles 10 días Apiladas", barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"])
     # Crear el gráfico de dispersión y asignarle un nombre para la leyenda
     # Crear el trace adicional utilizando go.Scatter() y asignarle un nombre para la leyenda
@@ -1762,6 +1793,13 @@ if funcion== "Análisis Excel Avance IX Etapa":
 
     # Mostrar el gráfico
     st.plotly_chart(fig)
+    col2,col3=st.columns(2)
+    col2.metric(label="Acumulado Histórico",value=suma_actual)
+    style_metric_cards()
+    #col2.metric(label="Acumulado Histórico",value=suma_actual,delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
+
+    #col3.metric(label="Total por Depositar",value=suma_diciembre-suma_actual,delta=str(-round(((suma_diciembre-suma_actual)/suma_diciembre)*100,1))+"% Restante")
+
     #Tablas que pidió Camilo Sacar 
     #st.markdown("**Producción Agrupada por Sección**")
     #st.write(df_limpieza)
