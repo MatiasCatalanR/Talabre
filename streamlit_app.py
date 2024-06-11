@@ -1736,7 +1736,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
 
     # Definir los colores para las rectas
     colores = ["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"]
-
+    data_total1 = data[data['Seccion'] == 'Total']
     # Graficar los valores utilizando plotly
     fig = px.line(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", title="Rellenos Compactados Media Móvil 10 días")
 
@@ -1823,11 +1823,22 @@ if funcion== "Análisis Excel Avance IX Etapa":
 
     fig.update_layout(width=900, height=500)
 
+    #data_total
+    valor_mas_reciente1 = data_total1.loc[data_total1['Fecha'].idxmax(), 'Metros Cúbicos Compactados']
+    valor_mas_reciente = data_total.loc[data_total['Fecha'].idxmax(), 'Metros Cúbicos Compactados']
 
+    #alor_mas_reciente
     # Mostrar el gráfico
     st.plotly_chart(fig)
-    col2,col3=st.columns(2)
-    col2.metric(label="m³ Geométricos Acumulados",value=str(suma_actual))
+    st.markdown("**m³ Geométricos:**")
+
+    col2,col4,col5,col3=st.columns(4)
+    col2.metric(label="Acumulados",value=str(suma_actual)) 
+    maximo=data_total['Metros Cúbicos Compactados'].max()
+    col3.metric(label="Máximo Alcanzado en un día",value=int(maximo))
+    col4.metric(label='Último Relleno',value=int(valor_mas_reciente))
+    col5.metric(label='Última Media Móvil',value=int(valor_mas_reciente1))
+
     style_metric_cards()
     #col2.metric(label="Acumulado Histórico",value=suma_actual,delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
 
