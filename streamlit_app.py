@@ -60,9 +60,10 @@ image_bytes = buf.getvalue()
 #st.sidebar.markdown(html, unsafe_allow_html=True)
 
 # Agregar un separador después de la imagen
+
+st.sidebar.markdown("<h1 style='text-align: center; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
 st.sidebar.markdown("<hr style='border:2.5px solid white'> </hr>", unsafe_allow_html=True)
 
-st.sidebar.markdown("<h1 style='text-align: left; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
 funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","En Desarrollo 1","En Desarrollo 2"])
 
 url_despacho='https://icons8.com/icon/21183/in-transit'
