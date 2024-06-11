@@ -153,10 +153,10 @@ if funcion=="Reporte Inicio-Término Turno":
         km_recorridos = df['distancia_recorrida__km_'].sum()
         camiones_totales=df['patente'].nunique()
         col5,col6,col7=st.columns(3)
-        col5.metric(label="m³ Transportados", value=format(total_ciclos*20, ','))
-        col6.metric(label="Total Ciclos", value=format(total_ciclos, ','))
-        col7.metric(label="Camiones Operativos", value=format(camiones_totales, ','))
-        st.metric(label="m³ Geométricos", value=format(int((total_ciclos*20)/1.42), ','))
+        col5.metric(label="m³ Transportados", value=format(total_ciclos*20, ',').replace(',', '.'))
+        col6.metric(label="Total Ciclos", value=format(total_ciclos, ',').replace(',', '.'))
+        col7.metric(label="Camiones Operativos", value=format(camiones_totales, ',').replace(',', '.'))
+        st.metric(label="m³ Geométricos", value=format(int((total_ciclos*20)/1.42), ',').replace(',', '.'))
 
         #st.metric(label="Km Totales",value=int(km_recorridos))
 
@@ -1834,11 +1834,12 @@ if funcion== "Análisis Excel Avance IX Etapa":
     st.markdown("**m³ Geométricos:**")
 
     col2,col4,col5,col3=st.columns(4)
-    col2.metric(label="Acumulados", value="{:,}".format(suma_actual))
+    col2.metric(label="Acumulados", value=format(suma_actual,',').replace(',', '.'))
     maximo = data_total['Metros Cúbicos Compactados'].max()
-    col3.metric(label="Máximo Alcanzado en un día", value="{:,}".format(int(maximo)))
-    col4.metric(label='Último Relleno', value="{:,}".format(int(valor_mas_reciente)))
-    col5.metric(label='Última Media Móvil', value="{:,}".format(int(valor_mas_reciente1)))
+    col3.metric(label="Máximo Alcanzado en un día", value=format(int(maximo),',').replace(',', '.'))
+    col4.metric(label='Último Relleno', value=format(int(valor_mas_reciente),',').replace(',', '.'))
+    col5.metric(label='Última Media Móvil', value=format(int(valor_mas_reciente1),',').replace(',', '.'))
+
 
 
     style_metric_cards()
