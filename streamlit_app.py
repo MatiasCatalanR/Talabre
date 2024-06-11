@@ -1405,9 +1405,9 @@ if funcion== "En Desarrollo 1":
     suma_actual=int(suma_total_historica)
     suma_diciembre=int(suma_actual)+int(suma_proyectado)
 
-    col1.metric(label="Esperado a diciembre",value=suma_diciembre,delta=str(round(suma_diciembre/2600000*100,1))+"% del MDG")
-    col2.metric(label="Acumulado Histórico",value=suma_actual,delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
-    col3.metric(label="Total por Depositar",value=suma_diciembre-suma_actual,delta=str(-round(((suma_diciembre-suma_actual)/suma_diciembre)*100,1))+"% Restante")
+    col1.metric(label="Esperado a diciembre",value=format(suma_diciembre,',').replace(',', '.'),delta=str(round(suma_diciembre/2600000*100,1))+"% del MDG")
+    col2.metric(label="Acumulado Histórico",value=format(suma_actual,',').replace(',', '.'),delta=str(round(suma_actual/(suma_diciembre)*100,1))+"% de Cumplimiento")
+    col3.metric(label="Total por Depositar",value=format((suma_diciembre-suma_actual),',').replace(',', '.'),delta=str(-round(((suma_diciembre-suma_actual)/suma_diciembre)*100,1))+"% Restante")
 
 ### parte analisis historico
 
