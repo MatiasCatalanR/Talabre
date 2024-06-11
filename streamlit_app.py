@@ -77,7 +77,7 @@ url_despacho='https://icons8.com/icon/21183/in-transit'
 if funcion=="Reporte Inicio-Término Turno":
     import datetime
 
-    st.title('📊 Análisis de Relleno al Inicio y Término del Turno Diurno')
+    st.title('📊 Análisis de Relleno al Inicio y Término del Turno')
     # Obtener la fecha seleccionada por el usuario
     #selected_date = st.sidebar.date_input("Seleccione una fecha")
 
@@ -500,7 +500,7 @@ if funcion=="Reporte Inicio-Término Turno":
         # Mostrar el valor como un KPI en Streamlit
         st.markdown(f'<h1 style="text-align: center;">{inicio_cargado}</h1>', unsafe_allow_html=True)
         st.markdown('<p style="text-align: center; font-size: 20px;">Total Camiones Cargados al Inicio de Turno</p>', unsafe_allow_html=True)
-
+        st.header("Turno Diurno:")
         # Calcular el promedio, mínimo y máximo
         promedio_segundos = turno_diurno_df['inicio_turno_segundos'].mean()
         minimo_segundos = turno_diurno_df['inicio_turno_segundos'].min()
@@ -743,7 +743,7 @@ if funcion=="Reporte Inicio-Término Turno":
         fig.update_layout(title='Primer Registro al Comienzo del Turno Diurno por Patente')
         fig.update_layout(width=1000, height=500)
         # Muestra el gráfico en Streamlit
-        st.plotly_chart(fig)
+        st.plotly_chart(fig, use_container_width=True)
 
         # Crear los dataframes basados en el valor de la columna "Origen"
         df_analisis_iniciot = filtered_df.loc[filtered_df['Origen'] == 'Inicio Turno', ['fecha', 'Patente', 'hora']]
@@ -1276,7 +1276,7 @@ if funcion== "En Desarrollo 1":
     fig.add_trace(go.Scatter(x=data["Fecha"], y=[15000] * len(data), mode="lines", name="Meta Diaria Total", line_color="#bb5726"))
 
     fig.update_layout(width=900, height=500)
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
     # Obtener las secciones del DataFrame
     secciones = df_limpieza_media_movil["Secciones"].unique()
 
@@ -1400,7 +1400,7 @@ if funcion== "En Desarrollo 1":
     fig1.add_trace(scatter_trace)
 
     fig1.update_layout(width=900, height=500)
-    st.plotly_chart(fig1)
+    st.plotly_chart(fig1, use_container_width=True)
     col1, col2,col3=st.columns(3)
     suma_actual=int(suma_total_historica)
     suma_diciembre=int(suma_actual)+int(suma_proyectado)
@@ -1752,7 +1752,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
     fig.add_trace(go.Scatter(x=data["Fecha"], y=[15000] * len(data), mode="lines", name="Meta Diaria Total", line_color="#bb5726"))
 
     fig.update_layout(width=900, height=500)
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
     # Obtener las secciones del DataFrame
     secciones = df_limpieza_media_movil["Secciones"].unique()
 
@@ -1831,7 +1831,7 @@ if funcion== "Análisis Excel Avance IX Etapa":
 
     #alor_mas_reciente
     # Mostrar el gráfico
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown("**m³ Geométricos:**")
 
     col2,col4,col5,col3=st.columns(4)
