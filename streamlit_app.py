@@ -125,7 +125,7 @@ if funcion=="Reporte Inicio-Término Turno":
     # Verificar si la petición fue exitosa
 
     response2 = requests.get(url2, auth=HTTPBasicAuth(username, password))
-    
+    boton='off'
     if response.status_code == 200 and response2.status_code == 200:
         # Convertir la respuesta a JSON
         data = response.json()
@@ -133,7 +133,9 @@ if funcion=="Reporte Inicio-Término Turno":
         data2 = response2.json()
         df_horometro=pd.DataFrame(data2)
         #st.write(df_horometro)
-        if st.sidebar.checkbox('Mostrar base de datos'):
+        
+        if st.sidebar.toggle('Mostrar base de datos'):
+            boton='on'
             st.write("Reporte Ciclos")
             st.write(df_ciclo)
             st.write("Reporte Horometro")
@@ -488,7 +490,9 @@ if funcion=="Reporte Inicio-Término Turno":
         # Filtrar el DataFrame por el rango de horas
         turno_diurno_df = turno_diurno_df[(turno_diurno_df['inicio_turno'] >= time(8, 15, 0)) & (turno_diurno_df['inicio_turno'] <= time(11, 0, 0))]
         fin_turno_diurno_df = turno_diurno_it[(turno_diurno_it['fin_turno'] >= time(17, 0, 0)) & (turno_diurno_it['fin_turno'] <= time(20, 0, 0))]
-        
+        if fin_turno_diurno_df.empty:
+            fin_turno_diurno_df = turno_diurno_it
+            
 
 
         # Convertir 'inicio_turno' a segundos
@@ -598,9 +602,9 @@ if funcion=="Reporte Inicio-Término Turno":
             st.markdown(f'<div style="color: green; font-size: medium; padding: 10px; background-color: lightgreen; border-radius: 10px;">Primer Camión: {minimo}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="color: red; font-size: medium; padding: 10px; background-color: lightcoral; border-radius: 10px;">Último Camión: {maximo}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="color: orange; font-size: medium; padding: 10px; background-color: lightyellow; border-radius: 10px;">Desviación Estándar: {dsv}</div>', unsafe_allow_html=True)
-            entrada_carga_df=inicio_carga_df[['fecha','patente','inicio_carga']].copy()
+            inicio_carga_df_df=inicio_carga_df[['fecha','patente','inicio_carga']].copy()
             
-            st.write(entrada_carga_df)
+            st.write(inicio_carga_df)
 
         #inicio carga
         fin_carga_df['fin_carga_segundos'] = fin_carga_df['fin_carga'].apply(lambda x: x.hour * 3600 + x.minute * 60 + x.second)
@@ -807,28 +811,29 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
         histograma = histograma.apply(lambda x: x.str.replace('%','').astype(np.float64))
+        if boton=="on":
 
-        st.header("Análisis exploratorio de los datos")
+            st.header("Análisis exploratorio de los datos")
 
 
 
-        # Identify numerical columns 
-        numerical_columns = histograma.select_dtypes(include=["int64", "float64"]).columns 
-        # Plot distribution of each numerical feature 
-        plt.figure(figsize=(14, len(numerical_columns) * 3)) 
-        for idx, feature in enumerate(numerical_columns, 1): 
-            plt.subplot(len(numerical_columns), 2, idx) 
-            sns.histplot(histograma[feature], kde=True) 
-            plt.title(f"{feature} | Skewness: {round(histograma[feature].skew(), 2)}") 
-        
-        # Adjust layout and show plots 
-        plt.tight_layout() 
-        #plt.show() 
-        st.pyplot(plt)
-        st.markdown("**Estadística Básica**")
-        st.write(histograma.describe())
-        st.markdown("**Matriz de correlación**")
-        st.write(histograma.corr())
+            # Identify numerical columns 
+            numerical_columns = histograma.select_dtypes(include=["int64", "float64"]).columns 
+            # Plot distribution of each numerical feature 
+            plt.figure(figsize=(14, len(numerical_columns) * 3)) 
+            for idx, feature in enumerate(numerical_columns, 1): 
+                plt.subplot(len(numerical_columns), 2, idx) 
+                sns.histplot(histograma[feature], kde=True) 
+                plt.title(f"{feature} | Skewness: {round(histograma[feature].skew(), 2)}") 
+            
+            # Adjust layout and show plots 
+            plt.tight_layout() 
+            #plt.show() 
+            st.pyplot(plt)
+            st.markdown("**Estadística Básica**")
+            st.write(histograma.describe())
+            st.markdown("**Matriz de correlación**")
+            st.write(histograma.corr())
 
 
 ###pruebas inicio turno 
@@ -882,38 +887,13 @@ if funcion=="Transgresiones Históricas":
         st.write(data)
 
 
-if funcion=="Programación Rellenos":
+if funcion=="En Desarrollo 2":
     base_id='appUIz9SCHdcZDk1T'
     table_id='tblzZLoGJAP3cDwhj'
     personal_access_token='patii9YeJWbaL2hRu.c4f92462f3b6cb1b0f43ba1e6194ab9266209c836167eca08688594167590d0d'
-    
-    def create_headers():
-        headers = {
-        'Authorization': 'Bearer ' + str(personal_access_token),
-        'Content-Type': 'application/json',
-        }
-        return headers
+    df = pd.read_csv('https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/Copia%20de%20Prog_Rellenos.csv', sep=';', index_col=False)
+    df
 
-    base_table_api_url = 'https://api.airtable.com/v0/{}/{}'.format(base_id, table_id)
-    headers=create_headers()
-    response = requests.get(base_table_api_url, headers=headers)
-    if response.status_code == 200:
-        # Convierte la respuesta en formato JSON a un diccionario
-        data = response.json()
-        
-        # Extrae los registros de la respuesta
-        records = data['records']
-        
-        # Crea una lista vacía para almacenar los datos de cada registro
-        rows = []
-        
-        # Recorre cada registro y extrae los datos necesarios
-        for record in records:
-            fields = record['fields']
-            rows.append(fields)
-
-        # Crea el DataFrame utilizando la lista de registros
-        df = pd.DataFrame(rows)
 
     st.title("🧮 Programación Rellenos")
 
@@ -1045,45 +1025,55 @@ if funcion=="Programación Rellenos":
     # Crear un nuevo dataframe con las columnas requeridas
     new_df = pd.melt(df, id_vars=['ÁREA'], value_vars=fechas, var_name='Fecha', value_name='Metros Cúbicos')
 
-    # Convertir la columna 'Fecha' a formato de texto y extraer el mes y el año
-    new_df['Fecha'] = pd.to_datetime(new_df['Fecha']).dt.strftime('%Y-%m')
+    # Eliminar filas con valores nulos en la columna 'Metros Cúbicos'
+    new_df = new_df.dropna(subset=['Metros Cúbicos'])
+    # Convertir los datos a tipo entero
+    new_df['Metros Cúbicos'] = new_df['Metros Cúbicos'].astype(int)
 
     # Calcular la Metros Cúbicos para cada 'ÁREA' y 'Fecha'
     new_df = new_df.groupby(['ÁREA', 'Fecha'])['Metros Cúbicos'].sum().reset_index()
-
+    
     # Calcular el total para cada 'Fecha'
     total_df = new_df.groupby('Fecha')['Metros Cúbicos'].sum().reset_index()
-    total_df.columns = ['Fecha', 'Total']
+    
+    #new_df=new_df.replace('-', '', inplace=True)
+
+
+    #total_df.columns = ['Fecha', 'Total']
+    
 
     # Unir el dataframe original con los totales
-    new_df = pd.merge(new_df, total_df, on='Fecha')
-    
+    #new_df = pd.merge(new_df, total_df, on='Fecha')
+
     # Ordena el DataFrame por 'Metros Cúbicos VP' en orden descendente
     new_df = new_df.sort_values('ÁREA')
-
     # Crea un diccionario que mapea cada 'ÁREA' a un color
     color_dict = {area: colormap[i % len(colormap)] for i, area in enumerate(new_df['ÁREA'].unique())}
     st.markdown("**Metros Cúbicos Mensuales a Transportar por Área**")
-    # Crea el gráfico de barras apiladas
+    # Convertir la columna 'Fecha' a tipo datetime
+    new_df['Fecha'] = pd.to_datetime(new_df['Fecha'], format='%d-%m-%Y')
+
+    # Obtener el año y el mes de la fecha
+    new_df['Año_Mes'] = new_df['Fecha'].dt.strftime('%Y-%m')
+
+    # Crear el gráfico de barras apiladas
     chart = alt.Chart(new_df).mark_bar().encode(
-        x='Fecha:N',
+        x=alt.X('Año_Mes:O', sort='ascending'),  # Ordenar las fechas de manera ascendente
         y='Metros Cúbicos:Q',
         color=alt.Color('ÁREA:N', scale=alt.Scale(scheme="cividis")),
         tooltip=[
             'Fecha:N', 
             alt.Tooltip('ÁREA:N'),
-            alt.Tooltip('Metros Cúbicos:Q', format=',d'),
+            alt.Tooltip('Metros Cúbicos_x:Q', format=',d'),
             alt.Tooltip('Total:Q', format=',d')
-        ],
-        order=alt.Order(
-        'Fecha:N',
-        sort='ascending'
-        )
+        ]
     ).properties(
         width=800,
         height=500
     )
+
     chart
+
 
 
 if funcion== "En Desarrollo 1":
@@ -1828,6 +1818,16 @@ if funcion== "Análisis Excel Avance IX Etapa":
     #data_total
     valor_mas_reciente1 = data_total1.loc[data_total1['Fecha'].idxmax(), 'Metros Cúbicos Compactados']
     valor_mas_reciente = data_total.loc[data_total['Fecha'].idxmax(), 'Metros Cúbicos Compactados']
+
+
+    while valor_mas_reciente == 0:
+        # Obtener el valor de la fecha anterior
+        fecha_anterior = data_total.loc[data_total['Fecha'].idxmax() - 1, 'Metros Cúbicos Compactados']
+        valor_mas_reciente = fecha_anterior
+        # Restarle 1 a la fecha
+        data_total['Fecha'] = data_total['Fecha'] - pd.DateOffset(days=1)
+
+
 
     #alor_mas_reciente
     # Mostrar el gráfico
