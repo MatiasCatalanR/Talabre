@@ -1820,12 +1820,6 @@ if funcion== "Análisis Excel Avance IX Etapa":
     valor_mas_reciente = data_total.loc[data_total['Fecha'].idxmax(), 'Metros Cúbicos Compactados']
 
 
-    while valor_mas_reciente == 0:
-        # Obtener el valor de la fecha anterior
-        fecha_anterior = data_total.loc[data_total['Fecha'].idxmax() - 1, 'Metros Cúbicos Compactados']
-        valor_mas_reciente = fecha_anterior
-        # Restarle 1 a la fecha
-        data_total['Fecha'] = data_total['Fecha'] - pd.DateOffset(days=1)
 
 
 
