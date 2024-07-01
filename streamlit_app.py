@@ -108,7 +108,6 @@ if funcion=="Reporte Inicio-Término Turno":
 
         # URL de la API
         url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(mañana)+" 08:00:00"
-        
         #ajustar horometros en algun momento 
         url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(d[0])+" 20:00:00"
     else:
@@ -454,7 +453,7 @@ if funcion=="Reporte Inicio-Término Turno":
         df_carguio = df.dropna(subset=['entrada_carguio'])
         df_inicio_carga = df.dropna(subset=['inicio_carga'])
         #st.write(df_carguio)
-        for (fecha, patente,tiempo_carga), group in df_carguio.groupby(['fecha', 'patente','tiempo_carga__min_']):
+        for (fecha, patente,tiempo_carga), group in df_carguio.groupby(['fecha', 'patente','tiempo_carga_min']):
             # Turno diurno
             entrada_carguio_diurno = group.loc[(group['entrada_carguio'].dt.time >= inicio_diurno_time) & (group['entrada_carguio'].dt.time < fin_diurno_time), 'entrada_carguio'].min()
             
@@ -493,6 +492,9 @@ if funcion=="Reporte Inicio-Término Turno":
         if fin_turno_diurno_df.empty:
             fin_turno_diurno_df = turno_diurno_it
             
+        if turno_diurno_df.empty:
+            turno_diurno_df = turno_diurno_it
+
 
 
         # Convertir 'inicio_turno' a segundos
@@ -710,12 +712,15 @@ if funcion=="Reporte Inicio-Término Turno":
         #st.write(combined_df)
         # Convertir la columna 'hora_formateada' a formato datetime
         combined_df2['hora_formateada'] = pd.to_datetime(combined_df2['hora_formateada'], format='%H:%M:%S')
-
         # Crear una máscara para filtrar las horas menores a las 12:00:00
+
         mask = (combined_df2['hora_formateada'].dt.hour < 12)
 
         # Aplicar la máscara al DataFrame
         filtered_df = combined_df2[mask]
+
+        if filtered_df.empty:
+            filtered_df=combined_df2
 
 
         # Graficar con Altair
@@ -796,7 +801,7 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
 
-        histograma = df[['t_cola_carga', 'tiempo_carga__min_', 'transito_cargado__min_', 't_cola_descarga', 'tiempo_descarga__min_', 'transito_descargado__min_', 'tiempo_ciclo__min_', 'kph_mean','kph_mean_ruta', 'kph_max', 'distancia_recorrida__km_', 'tiempo_demoras_min']]
+        histograma = df[['t_cola_carga', 'tiempo_carga_min', 'transito_cargado_min', 't_cola_descarga', 'tiempo_descarga_min', 'transito_descargado_min', 'tiempo_ciclo_min', 'kph_mean','kph_mean_ruta', 'kph_max', 'distancia_recorrida__km_', 'tiempo_demoras_min']]
 
         # Set Seaborn style 
         sns.set_style("darkgrid") 
@@ -834,8 +839,6 @@ if funcion=="Reporte Inicio-Término Turno":
             st.write(histograma.describe())
             st.markdown("**Matriz de correlación**")
             st.write(histograma.corr())
-
-
 ###pruebas inicio turno 
 
     else:
