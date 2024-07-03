@@ -251,7 +251,6 @@ if funcion=="Reporte Inicio-Término Turno":
         # Suponiendo que tu DataFrame se llama df y la columna es "fin_descarga"
         df['fin_descarga'] = df['fin_descarga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
 
-        # Repite el mismo proceso para las otras columnas si es necesario
         df['inicio_ciclo'] = df['inicio_ciclo'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
         df['fin_carga'] = df['fin_carga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
         df['entrada_carguio'] = df['entrada_carguio'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
