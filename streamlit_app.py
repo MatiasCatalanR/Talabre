@@ -248,9 +248,18 @@ if funcion=="Reporte Inicio-Término Turno":
             st.markdown("**Metros Cúbicos por Destino**")
             st_echarts(options=optionsd, height="300px")
 
+        # Suponiendo que tu DataFrame se llama df y la columna es "fin_descarga"
+        df['fin_descarga'] = df['fin_descarga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
+
+        # Repite el mismo proceso para las otras columnas si es necesario
+        df['inicio_ciclo'] = df['inicio_ciclo'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
+        df['fin_carga'] = df['fin_carga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
+        df['entrada_carguio'] = df['entrada_carguio'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
+        df['inicio_carga'] = df['inicio_carga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
 
 
         # Convertir 'fin_descarga' a datetime y redondear a la hora más cercana
+        df['fin_descarga'] = pd.to_datetime(df['fin_descarga'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
         df['fin_descarga'] = pd.to_datetime(df['fin_descarga']).dt.round('H')
 
         # Agrupar por 'lugar_descarga' y 'fin_descarga', y contar el número de entradas
@@ -802,20 +811,23 @@ if funcion=="Reporte Inicio-Término Turno":
 
 
         histograma = df[['t_cola_carga', 'tiempo_carga_min', 'transito_cargado_min', 't_cola_descarga', 'tiempo_descarga_min', 'transito_descargado_min', 'tiempo_ciclo_min', 'kph_mean','kph_mean_ruta', 'kph_max', 'distancia_recorrida__km_', 'tiempo_demoras_min']]
-
         # Set Seaborn style 
         sns.set_style("darkgrid") 
+
         # Asumiendo que df es tu DataFrame original
         df_limpieza = df.dropna()
-        #histograma=histograma.apply(lambda col:pd.to_numeric(col, errors='coerce'))
+
         # Aplicar la conversión a cadenas de texto a todos los elementos del dataframe
         histograma = histograma.apply(lambda x: x.astype(str))
 
         # Aplicar el reemplazo de comas por puntos a todos los elementos del dataframe
         histograma = histograma.applymap(lambda x: x.replace(',', '.'))
 
-
+        # Reemplazar 'None' y valores nulos con '0'
+        histograma = histograma.replace('None', '0').fillna('0')
+        # Reemplazar los porcentajes y convertir a números flotantes
         histograma = histograma.apply(lambda x: x.str.replace('%','').astype(np.float64))
+
         if boton=="on":
 
             st.header("Análisis exploratorio de los datos")
@@ -839,10 +851,14 @@ if funcion=="Reporte Inicio-Término Turno":
             st.write(histograma.describe())
             st.markdown("**Matriz de correlación**")
             st.write(histograma.corr())
+
+
 ###pruebas inicio turno 
 
     else:
         st.error("Fecha sin Datos")
+
+   
 
    
 
