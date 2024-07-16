@@ -64,7 +64,7 @@ image_bytes = buf.getvalue()
 st.sidebar.markdown("<h1 style='text-align: center; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
 st.sidebar.markdown("<hr style='border:2.5px solid white'> </hr>", unsafe_allow_html=True)
 
-funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","En Desarrollo 1","En Desarrollo 2"])
+funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","En Desarrollo 1","En Desarrollo 2","Transgresiones de Velocidad","Equipos Obras Anexas","Pórtico"])
 
 url_despacho='https://icons8.com/icon/21183/in-transit'
 
@@ -114,19 +114,19 @@ if funcion=="Reporte Inicio-Término Turno":
         mañana = d[0] + datetime.timedelta(days=1)
         url = "https://api.terrestra.tech/cycles?start_date="+str(d[0]) +" 08:00:00&end_date="+str(mañana)+" 08:00:00"
         url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(mañana)+" 08:00:00"
-    # Credenciales para la autenticación básica
+    # Credenciales 
     username = "talabre"
     password = "cosmos_talabre_2024"
 
     # Realizar la petición GET a la API
     response = requests.get(url, auth=HTTPBasicAuth(username, password))
 
-    # Verificar si la petición fue exitosa
+    # Verificar si la petición fue exitosa 
 
     response2 = requests.get(url2, auth=HTTPBasicAuth(username, password))
     boton='off'
     if response.status_code == 200 and response2.status_code == 200:
-        # Convertir la respuesta a JSON
+        # Convertir la respuesta a JSON y df
         data = response.json()
         df_ciclo=pd.DataFrame(data)
         data2 = response2.json()
@@ -158,7 +158,7 @@ if funcion=="Reporte Inicio-Término Turno":
         col5.metric(label="m³ Transportados", value=format(total_ciclos*20, ',').replace(',', '.'))
         col6.metric(label="Total Ciclos", value=format(total_ciclos, ',').replace(',', '.'))
         col7.metric(label="Camiones Operativos", value=format(camiones_totales, ',').replace(',', '.'))
-        st.metric(label="m³ Geométricos", value=format(int((total_ciclos*20)/1.42), ',').replace(',', '.'))
+        st.metric(label="m³ Geométricos", value=format(int((total_ciclos*14)), ',').replace(',', '.'))
 
         #st.metric(label="Km Totales",value=int(km_recorridos))
 
@@ -251,6 +251,7 @@ if funcion=="Reporte Inicio-Término Turno":
         # Suponiendo que tu DataFrame se llama df y la columna es "fin_descarga"
         df['fin_descarga'] = df['fin_descarga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
 
+        # Repite el mismo proceso para las otras columnas si es necesario
         df['inicio_ciclo'] = df['inicio_ciclo'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
         df['fin_carga'] = df['fin_carga'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
         df['entrada_carguio'] = df['entrada_carguio'].apply(lambda x: pd.to_datetime(x).tz_localize(None) if x.endswith('-04:00') else pd.to_datetime(x, format='%Y-%m-%d %H:%M:%S'))
@@ -858,52 +859,275 @@ if funcion=="Reporte Inicio-Término Turno":
         st.error("Fecha sin Datos")
 
    
-
+if funcion=="Equipos Obras Anexas":
+    st.title(" Equipos trabajando en Obras Anexas")
+    import matplotlib.pyplot as plt
+    import matplotlib
+    df=pd.read_csv("https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/d02c8d8b-d462-4f3d-b7f6-e0132aec1ec6.csv")
    
+    if df is not None:
+        df['tiempo_encendido_total'] = df['tiempo_encendido_total'].str.replace(',', '.').astype(float)
+    # Asegurándonos de que 'fecha_inicio' es datetime
+    df['fecha_inicio'] = pd.to_datetime(df['fecha_inicio'])
 
-    
-            
-if funcion=="Transgresiones Históricas":
-    st.sidebar.title('Cargar archivo')
-    uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
-    if uploaded_file is not None:
-        df = pd.read_excel(uploaded_file)
-        st.write(df)
-        data = df[['apellido', 'nombre']].value_counts().reset_index()
-        data.columns = ['apellido', 'nombre', 'count']
-        data_grafico = data[data['apellido'] != 'Sin registro']
-        data_grafico = data_grafico[data_grafico['apellido'] != 'Sin Registro']
+    # Agrupando por fecha y patente, y sumando las horas encendidas
+    df_grouped = df.groupby([df['fecha_inicio'].dt.date, 'truckpatent'])['tiempo_encendido_total'].sum().reset_index()
+    # Obtén el mapa de colores 'Inferno_r'
+    cmap = plt.get_cmap('rocket')
+
+    # Selecciona 5 colores de manera uniforme a lo largo del mapa de colores
+    colors = [cmap(i) for i in np.linspace(0, 1, 5)]
+    # Convierte los colores RGBA a formato hexadecimal
+    hex_colors = [matplotlib.colors.rgb2hex(color) for color in colors]
+
+    # Crea un diccionario que mapea las patentes a los colores
+    color_dict = {'EXCA-184': hex_colors[0], 'EXCA-684': hex_colors[1], 'RETRO-365': hex_colors[2], 'RETRO-628': hex_colors[3], 'SWKS81': hex_colors[4]}
+    df_grouped = df_grouped.sort_values('truckpatent', ascending=False)
+
+    fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 10 de Junio al 10 de Julio',
+                labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckPatent':'Patente'},
+                color_discrete_map=color_dict)   
+    st.plotly_chart(fig, use_container_width=True)
+
+    import datetime
+
+    dias_a_restar = 6
+
+    # Obtén la fecha de hoy y la fecha de hace 7 días
+    hoy = datetime.date.today()
+    hace_siete_dias = hoy - datetime.timedelta(days=dias_a_restar)
+
+    # Crea el selector de fechas con el rango predeterminado
+    d = st.sidebar.date_input(
+        "Seleccione una Fecha",
+        (hace_siete_dias, hoy),
+        format="MM.DD.YYYY",
+    )
 
 
+    # Restar días
+    #nueva_fecha = selected_date - timedelta(days=dias_a_restar)
+    #st.write(nueva_fecha)
+
+    if len(d)==2:
+        mañana = d[1] + datetime.timedelta(days=1)
+
+        # URL de la API
+        #ajustar horometros en algun momento 
+        url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(mañana)+" 08:00:00"
+    else:
+        mañana = d[0] + datetime.timedelta(days=1)
+        url2 ="https://api.terrestra.tech/horometers?start_date="+str(d[0])+" 08:00:00&end_date="+str(mañana)+" 08:00:00"
+    # Credenciales 
+    username = "talabre"
+    password = "cosmos_talabre_2024"
+
+
+    # Verificar si la petición fue exitosa 
+
+    response2 = requests.get(url2, auth=HTTPBasicAuth(username, password))
+    boton='off'
+    if response2.status_code == 200:
+        # Convertir la respuesta a JSON y df
+        data2 = response2.json()
+        df_horometro=pd.DataFrame(data2)
+        #st.write(df_horometro)
         
-        pie = (
-            Pie()
-            .add("", [list(z) for z in zip(data_grafico['apellido'], data_grafico['count'])], radius=["40%", "75%"])
-            .set_global_opts(
-                legend_opts=opts.LegendOpts(is_show=False), # Oculta la leyenda de colores
-                graphic_opts=[
-                    opts.GraphicText(
-                        graphic_item=opts.GraphicItem(
-                            left="center",
-                            top="center",
-                            z=1
-                        ),
-                        graphic_textstyle_opts=opts.GraphicTextStyleOpts(
-                            text=f"{len(data_grafico)} Infractores",
-                            font="bold 17px Microsoft YaHei",
-                            graphic_basicstyle_opts=opts.GraphicBasicStyleOpts(fill="#333")
-                        )
-                    )
-                ]
-            )
-            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}"), # Muestra solo el apellido
-                            tooltip_opts=opts.TooltipOpts(formatter="{b}: {c} ({d}%)")) # Muestra el número y el porcentaje solo al pasar el mouse por encima
-        )
-        st.markdown("**Transgresiones de Velocidad por Operador**")
-        # Mostrar el gráfico en Streamlit
-        st_pyecharts(pie)
-        st.write(data)
+        df=df_horometro
+        geocercas = df['truckPatent'].unique()
+        geocercas = np.insert(geocercas, 0, "Todas")
+        patentes_anexas = [ 'EXCA-684', 'RETRO-365', 'RETRO-628', 'SWKS81']
+        patentes_anexas = [patente for patente in patentes_anexas if patente in geocercas]
+        selected_geocerca = st.sidebar.multiselect("Selecciona las Patentes", geocercas, default=patentes_anexas)
+        if "Todas" in selected_geocerca:
+            filtered_df = df  # No se aplica ningún filtro
+        else:
+            filtered_df = df[df['truckPatent'].isin(selected_geocerca)]
+        df=filtered_df
 
+
+
+
+
+        df["fecha_inicio"]=pd.to_datetime(df["fecha_inicio"])
+        if df is not None:
+            df['tiempo_encendido_total'] = df['tiempo_encendido_total'].str.replace(',', '.').astype(float)
+        # Asegurándonos de que 'fecha_inicio' es datetime
+        df['fecha_inicio'] = pd.to_datetime(df['fecha_inicio'])
+
+        # Agrupando por fecha y patente, y sumando las horas encendidas
+        df_grouped = df.groupby([df['fecha_inicio'].dt.date, 'truckPatent'])['tiempo_encendido_total'].sum().reset_index()
+        df_grouped = df_grouped.sort_values('truckPatent', ascending=False)
+
+        fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckPatent', title='Horas encendidas Periodo-Patentes Seleccionadas',
+                    labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckPatent':'Patente'},
+                    color_discrete_map=color_dict)
+
+        fig.update_xaxes(type='category')  # Establecer el tipo de eje x como categoría para mostrar solo fechas
+        fig.update_layout(xaxis={'type': 'category', 'categoryorder': 'category ascending'})  # Ordenar las fechas de forma ascendente
+
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.error("Seleccione un Periodo mas Acotado/con Datos en obras Anexas")
+if funcion=="Transgresiones de Velocidad":
+    st.title("🛑 Transgresiones de Velocidad")
+
+    import pandas as pd
+    from pyecharts import options as opts
+    from pyecharts.charts import Pie
+    from streamlit_echarts import st_pyecharts
+
+    df=pd.read_csv("https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/Transgresiones_historicas%20(7).csv")
+    
+    if df is not None:
+        df['exceso_velocidad_kmh'] = df['exceso_velocidad_kmh'].str.replace(',', '.').astype(float)
+        df['velocidad_kmh'] = df['velocidad_kmh'].str.replace(',', '.').astype(float)
+
+        geocercas = df['geocerca'].unique()
+        geocercas = np.insert(geocercas, 0, "Todas")
+        selected_geocerca = st.sidebar.multiselect("Selecciona las Geocercas", geocercas, default=["Todas"])
+        # Agregar checkboxes y slider
+        if "Todas" in selected_geocerca:
+            filtered_df = df  # No se aplica ningún filtro
+        else:
+            filtered_df = df[df['geocerca'].isin(selected_geocerca)]
+        
+        st.sidebar.markdown("**Dirección:**")
+        col1, col2 = st.sidebar.columns(2)
+        direccion_subida = col1.checkbox("Subida", value=True)
+        direccion_bajada = col2.checkbox("Bajada", value=True)
+        if direccion_subida and direccion_bajada:
+            nada=0
+        else:
+            if direccion_subida:
+                filtered_df=filtered_df[filtered_df['velocidad_kmh']-filtered_df['exceso_velocidad_kmh']-filtered_df['limite_subida']==0]
+            if direccion_bajada:
+                filtered_df=filtered_df[filtered_df['velocidad_kmh']-filtered_df['exceso_velocidad_kmh']-filtered_df['limite_bajada']==0]
+        exceso_velocidad = st.sidebar.slider("Excesos de Velocidad (km/hr)", 0, 50, (5, 20))
+        filtered_df=filtered_df[filtered_df['exceso_velocidad_kmh']>exceso_velocidad[0]]
+        filtered_df=filtered_df[filtered_df['exceso_velocidad_kmh']<exceso_velocidad[1]]
+        filtro_inteligente=st.sidebar.checkbox("Filtrado Inteligente de los datos", value=True)
+        if filtro_inteligente:
+
+            # Convertir la columna 'fecha_hora' al tipo datetime si aún no lo es
+            filtered_df['fecha_hora'] = pd.to_datetime(filtered_df['fecha_hora'])
+
+            # Calcular la diferencia porcentual entre 'velocidad_kmh' y 'Velocidad_Ecu'
+            filtered_df['diferencia_porcentual'] = abs((filtered_df['velocidad_kmh'] - filtered_df['Velocidad_Ecu']) / filtered_df['velocidad_kmh'] * 100)
+
+            # Filtrar los registros que cumplen con la condición de diferencia porcentual
+            filtered_df = filtered_df[filtered_df['diferencia_porcentual'] <= 20]
+
+            # Definir un periodo de 2 minutos
+            periodo = pd.Timedelta(minutes=5)
+            filtered_df = filtered_df.drop_duplicates(subset=['fecha_hora', 'patente'])
+
+
+            # Agrupar por patente y por cada periodo de 2 minutos, luego seleccionar el registro con el valor más alto de 'exceso_velocidad_kmh'
+            filtered_df = filtered_df.groupby(['patente', pd.Grouper(key='fecha_hora', freq=periodo)])['exceso_velocidad_kmh'].idxmax().apply(lambda x: filtered_df.loc[x])
+
+        if filtered_df.empty:
+            st.error("Sin Transgresiones")
+
+        # Filtrar el DataFrame según las geocercas seleccionadas
+        else:
+    
+
+            # Primero, asignamos un color único a cada registro en el DataFrame
+            filtered_df['color'] = np.arange(len(filtered_df))
+
+            # Ahora, creamos el gráfico de barras apiladas con el DataFrame modificado
+            fig = px.bar(filtered_df, x='exceso_velocidad_kmh', y=np.ones(filtered_df.shape[0]), title='Transgresiones de Velocidad Excesos Registrados',
+                        labels={'exceso_velocidad_kmh': 'Exceso de Velocidad (km/h)', 'y': 'Cantidad de Registros'},
+                        hover_data=['velocidad_kmh', 'geocerca', 'nombre', 'patente', 'fecha_hora','Velocidad_Ecu'],
+                        color='color',  # Asignar un color distinto a cada registro
+                        color_continuous_scale='Cividis')  # Usar la escala de colores 'Inferno'
+
+            fig.update_layout(barmode='stack')
+            fig.update_layout(width=1000, height=500)
+            col1, col2=st.columns(2)
+            with col1:
+                st.plotly_chart(fig, use_container_width=True)
+
+            # Ahora, creamos el gráfico de barras apiladas con el DataFrame modificado
+            fig = px.bar(filtered_df, x='velocidad_kmh', y=np.ones(filtered_df.shape[0]), title='Transgresiones de Velocidad Registradas',
+                        labels={'velocidad_kmh': ' Velocidad (km/h)', 'y': 'Cantidad de Registros'},
+                        hover_data=['velocidad_kmh', 'geocerca', 'nombre', 'patente', 'fecha_hora',],
+                        color='color',  # Asignar un color distinto a cada registro
+                        color_continuous_scale='Viridis')  # Usar la escala de colores 'Inferno'
+
+            fig.update_layout(barmode='stack')
+            fig.update_layout(width=1000, height=500)
+
+            with col2:
+                st.plotly_chart(fig, use_container_width=True)
+
+
+
+            data = filtered_df[['apellido', 'nombre']].value_counts().reset_index()
+            data.columns = ['apellido', 'nombre', 'count']
+            data_grafico = data[data['apellido'] != 'Sin registro']
+            data_grafico = data_grafico[data_grafico['apellido'] != 'Sin Registro']
+            col1, col2=st.columns(2)
+            with col1:
+                st.markdown("**Transgresiones de Velocidad por Operador**")
+
+                pie = (
+                    Pie()
+                    .add("", [list(z) for z in zip(data_grafico['apellido'], data_grafico['count'])], radius=["40%", "75%"])
+                    .set_global_opts(
+                        legend_opts=opts.LegendOpts(is_show=False),
+                        graphic_opts=[
+                            opts.GraphicText(
+                                graphic_item=opts.GraphicItem(
+                                    left="center",
+                                    top="center",
+                                    z=1
+                                ),
+                                graphic_textstyle_opts=opts.GraphicTextStyleOpts(
+                                    text=f"{len(data_grafico)} Infractores",
+                                    font="bold 17px Microsoft YaHei",
+                                    graphic_basicstyle_opts=opts.GraphicBasicStyleOpts(fill="#333")
+                                )
+                            )
+                        ]
+                    )
+                    .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}"),
+                                    tooltip_opts=opts.TooltipOpts(formatter="{b}: {c} ({d}%)"))
+                )
+                st_pyecharts(pie)
+            with col2:
+
+
+                data = filtered_df[['geocerca']].value_counts().reset_index()
+                st.markdown("**Transgresiones por Geocerca**")
+                pie = (
+                    Pie()
+                    .add("", [list(z) for z in zip(data['geocerca'], data['count'])], radius=["40%", "75%"])
+                    .set_global_opts(
+                        legend_opts=opts.LegendOpts(is_show=False), # Oculta la leyenda de colores
+                        graphic_opts=[
+                            opts.GraphicText(
+                                graphic_item=opts.GraphicItem(
+                                    left="center",
+                                    top="center",
+                                    z=1
+                                ),
+                                graphic_textstyle_opts=opts.GraphicTextStyleOpts(
+                                    text=f"{len(data)} Geocercas",
+                                    font="bold 17px Microsoft YaHei",
+                                    graphic_basicstyle_opts=opts.GraphicBasicStyleOpts(fill="#333")
+                                )
+                            )
+                        ]
+                    )
+                    .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}"), # Muestra solo el apellido
+                                    tooltip_opts=opts.TooltipOpts(formatter="{b}: {c} ({d}%)")) # Muestra el número y el porcentaje solo al pasar el mouse por encima
+                )
+                # Mostrar el gráfico en Streamlit
+                st_pyecharts(pie)
+
+            st.write(filtered_df)
 
 if funcion=="En Desarrollo 2":
     base_id='appUIz9SCHdcZDk1T'
@@ -1606,6 +1830,55 @@ if funcion== "En Desarrollo 1":
 
         chart
         st.write(new_df)
+if funcion=="Pórtico":
+    df=pd.read_csv('https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/BD%20PORTICO.csv', sep=';', index_col=False)
+    df=df[df["Total (m3)"]>0]
+    df_mercedes=df[df["Modelo"]=="Mercedes"]
+    df_volvo=df[df["Modelo"]=="Volvo"]
+
+
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(15, 5))
+
+    plt.subplot(1, 3, 1)
+    sns.histplot(df["Total (m3)"])
+    plt.xticks(range(int(min(df["Total (m3)"])), int(max(df["Total (m3)"])) + 1))
+    plt.text(df["Total (m3)"].mean(), -9, f"Promedio: {df['Total (m3)'].mean():.2f}", ha='center')
+    plt.tight_layout()
+    plt.title("Histograma Carga Total Camiones (m3)")
+
+    plt.subplot(1, 3, 2)
+    sns.histplot(df_mercedes["Total (m3)"], color='grey')
+    plt.xticks(range(int(min(df_mercedes["Total (m3)"])), int(max(df_mercedes["Total (m3)"])) + 1))
+    plt.text(df_mercedes["Total (m3)"].mean(), -6, f"Promedio: {df_mercedes['Total (m3)'].mean():.2f}", ha='center')
+    plt.tight_layout()
+    plt.title("Histograma Carga Camión Mercedes (m3)")
+
+    plt.subplot(1, 3, 3)
+    sns.histplot(df_volvo["Total (m3)"], color='green')
+    plt.xticks(range(int(min(df_volvo["Total (m3)"])), int(max(df_volvo["Total (m3)"])) + 1))
+    plt.text(df_volvo["Total (m3)"].mean(), -4, f"Promedio: {df_volvo['Total (m3)'].mean():.2f}", ha='center')
+    plt.tight_layout()
+    plt.title("Histograma Carga Camión Volvo (m3)")
+
+    st.pyplot(plt)
+
+
+
+
+    df["Hora"] = pd.to_datetime(df["Hora"])
+    df["Fecha"] = df["Hora"].dt.date
+
+
+    promedio_diario = df.groupby("Fecha")["Total (m3)"].mean()
+
+
+    fig = px.line(promedio_diario, x=promedio_diario.index, y="Total (m3)", title="Promedio Diario")
+    fig.update_layout(width=900, height=500)
+
+    st.plotly_chart(fig, use_container_width=True)
 
 if funcion== "Análisis Excel Avance IX Etapa":
     st.title("📈 Análisis Avance IX Etapa")
@@ -1865,6 +2138,3 @@ if funcion== "Análisis Excel Avance IX Etapa":
     #st.write(df_limpieza)
     #st.markdown("**Media Movil**")
     #st.write(df_limpieza_media_movil)
-
-
-    
