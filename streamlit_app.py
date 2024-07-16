@@ -860,7 +860,7 @@ if funcion=="Reporte Inicio-Término Turno":
 
    
 if funcion=="Equipos Obras Anexas":
-    st.title(" Equipos trabajando en Obras Anexas")
+    st.title("🏗️ Equipos trabajando en Obras Anexas")
     import matplotlib.pyplot as plt
     import matplotlib
     df=pd.read_csv("https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/d02c8d8b-d462-4f3d-b7f6-e0132aec1ec6.csv")
