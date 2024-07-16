@@ -81,13 +81,13 @@ if funcion=="Reporte Inicio-Término Turno":
     # Obtener la fecha seleccionada por el usuario
     #selected_date = st.sidebar.date_input("Seleccione una fecha")
 
-    dias_a_restar = 10
+    dias_a_restar = 6
 
 
 
     # Obtén la fecha de hoy y la fecha de hace 7 días
     hoy = datetime.date.today()
-    hace_siete_dias = hoy - datetime.timedelta(days=9)
+    hace_siete_dias = hoy - datetime.timedelta(days=dias_a_restar)
 
     # Crea el selector de fechas con el rango predeterminado
     d = st.sidebar.date_input(
