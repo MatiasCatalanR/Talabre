@@ -863,7 +863,7 @@ if funcion=="Equipos Obras Anexas":
     st.title("🏗️ Equipos trabajando en Obras Anexas")
     import matplotlib.pyplot as plt
     import matplotlib
-    df=pd.read_csv("https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/d02c8d8b-d462-4f3d-b7f6-e0132aec1ec6.csv")
+    df=pd.read_csv("https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/2bce8243-fe86-4678-a840-55d5eeee3dfe.csv")
    
     if df is not None:
         df['tiempo_encendido_total'] = df['tiempo_encendido_total'].str.replace(',', '.').astype(float)
@@ -884,7 +884,7 @@ if funcion=="Equipos Obras Anexas":
     color_dict = {'EXCA-184': hex_colors[0], 'EXCA-684': hex_colors[1], 'RETRO-365': hex_colors[2], 'RETRO-628': hex_colors[3], 'SWKS81': hex_colors[4]}
     df_grouped = df_grouped.sort_values('truckpatent', ascending=False)
 
-    fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 10 de Junio al 10 de Julio',
+    fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 27 de Junio al 17 de Julio',
                 labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckPatent':'Patente'},
                 color_discrete_map=color_dict)   
     #st.plotly_chart(fig, use_container_width=True)
@@ -898,7 +898,7 @@ if funcion=="Equipos Obras Anexas":
     # Calculamos el promedio de horas operativas por fecha
     promedio_horas_operativas = df_grouped.groupby("fecha_inicio")['tiempo_encendido_total'].mean().reset_index()
 
-    fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 10 de Junio al 10 de Julio',
+    fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 27 de Junio al 17 de Julio',
                         labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckpatent':'Patente'},
                         color_discrete_map=color_dict)
 
