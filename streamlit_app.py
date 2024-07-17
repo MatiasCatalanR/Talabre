@@ -876,7 +876,7 @@ if funcion=="Equipos Obras Anexas":
     cmap = plt.get_cmap('rocket')
 
     # Selecciona 5 colores de manera uniforme a lo largo del mapa de colores
-    colors = [cmap(i) for i in np.linspace(0, 1, 5)]
+    colors = [cmap(i) for i in np.linspace(0, 1,6)]
     # Convierte los colores RGBA a formato hexadecimal
     hex_colors = [matplotlib.colors.rgb2hex(color) for color in colors]
 
@@ -887,6 +887,26 @@ if funcion=="Equipos Obras Anexas":
     fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 10 de Junio al 10 de Julio',
                 labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckPatent':'Patente'},
                 color_discrete_map=color_dict)   
+    #st.plotly_chart(fig, use_container_width=True)
+    
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    # Ordenamos el DataFrame por fecha
+    df_grouped = df_grouped.sort_values(by='fecha_inicio')
+
+    # Calculamos el promedio de horas operativas por fecha
+    promedio_horas_operativas = df_grouped.groupby("fecha_inicio")['tiempo_encendido_total'].mean().reset_index()
+
+    fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckpatent', title='Horas encendidas 10 de Junio al 10 de Julio',
+                        labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckpatent':'Patente'},
+                        color_discrete_map=color_dict)
+
+    fig.update_layout(barmode='group')
+
+    # Agregamos una recta con el promedio de horas operativas por fecha
+    fig.add_trace(go.Scatter(x=promedio_horas_operativas['fecha_inicio'], y=promedio_horas_operativas['tiempo_encendido_total'], mode='lines',line={'dash': 'dash','color':'black'}, name='Promedio Horas Operativas'))
+
     st.plotly_chart(fig, use_container_width=True)
 
     import datetime
@@ -965,6 +985,17 @@ if funcion=="Equipos Obras Anexas":
 
         fig.update_xaxes(type='category')  # Establecer el tipo de eje x como categoría para mostrar solo fechas
         fig.update_layout(xaxis={'type': 'category', 'categoryorder': 'category ascending'})  # Ordenar las fechas de forma ascendente
+        promedio_horas_operativas = df_grouped.groupby("fecha_inicio")['tiempo_encendido_total'].mean().reset_index()
+
+        #st.plotly_chart(fig, use_container_width=True)
+        fig = px.bar(df_grouped, x='fecha_inicio', y='tiempo_encendido_total', color='truckPatent', title='Horas encendidas equipos y periodo seleccionado',
+                        labels={'tiempo_encendido_total':'Horas Operativas', 'fecha_inicio':'Fecha', 'truckpatent':'Patente'},
+                        color_discrete_map=color_dict)   
+
+        fig.update_layout(barmode='group')
+
+        # Agregamos una recta con el promedio de horas operativas por fecha
+        fig.add_trace(go.Scatter(x=promedio_horas_operativas['fecha_inicio'], y=promedio_horas_operativas['tiempo_encendido_total'], mode='lines',line={'dash': 'dash','color':'black'}, name='Promedio Horas Operativas'))
 
         st.plotly_chart(fig, use_container_width=True)
     else:
