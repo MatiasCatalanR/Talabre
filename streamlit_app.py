@@ -998,6 +998,14 @@ if funcion=="Equipos Obras Anexas":
         fig.add_trace(go.Scatter(x=promedio_horas_operativas['fecha_inicio'], y=promedio_horas_operativas['tiempo_encendido_total'], mode='lines',line={'dash': 'dash','color':'black'}, name='Promedio Horas Operativas'))
 
         st.plotly_chart(fig, use_container_width=True)
+        st.header("HH Periodo Seleccionado:")
+
+        col2,col1=st.columns(2)
+        style_metric_cards()
+        with col1:
+            st.metric(label="Promedio de horas Operativas", value=round(df_grouped['tiempo_encendido_total'].mean(),1))
+        with col2:
+            st.metric(label="Total de Horas Operativas", value=round(df_grouped['tiempo_encendido_total'].sum(),1))
     else:
         st.error("Seleccione un Periodo mas Acotado/con Datos en obras Anexas")
 if funcion=="Transgresiones de Velocidad":
