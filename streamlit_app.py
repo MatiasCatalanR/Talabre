@@ -1874,54 +1874,164 @@ if funcion== "En Desarrollo 1":
         chart
         st.write(new_df)
 if funcion=="Pórtico":
-    df=pd.read_csv('https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/BD%20PORTICO.csv', sep=';', index_col=False)
-    df=df[df["Total (m3)"]>0]
-    df_mercedes=df[df["Modelo"]=="Mercedes"]
-    df_volvo=df[df["Modelo"]=="Volvo"]
-
-
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-
-    plt.figure(figsize=(15, 5))
-
-    plt.subplot(1, 3, 1)
-    sns.histplot(df["Total (m3)"])
-    plt.xticks(range(int(min(df["Total (m3)"])), int(max(df["Total (m3)"])) + 1))
-    plt.text(df["Total (m3)"].mean(), -9, f"Promedio: {df['Total (m3)'].mean():.2f}", ha='center')
-    plt.tight_layout()
-    plt.title("Histograma Carga Total Camiones (m3)")
-
-    plt.subplot(1, 3, 2)
-    sns.histplot(df_mercedes["Total (m3)"], color='grey')
-    plt.xticks(range(int(min(df_mercedes["Total (m3)"])), int(max(df_mercedes["Total (m3)"])) + 1))
-    plt.text(df_mercedes["Total (m3)"].mean(), -6, f"Promedio: {df_mercedes['Total (m3)'].mean():.2f}", ha='center')
-    plt.tight_layout()
-    plt.title("Histograma Carga Camión Mercedes (m3)")
-
-    plt.subplot(1, 3, 3)
-    sns.histplot(df_volvo["Total (m3)"], color='green')
-    plt.xticks(range(int(min(df_volvo["Total (m3)"])), int(max(df_volvo["Total (m3)"])) + 1))
-    plt.text(df_volvo["Total (m3)"].mean(), -4, f"Promedio: {df_volvo['Total (m3)'].mean():.2f}", ha='center')
-    plt.tight_layout()
-    plt.title("Histograma Carga Camión Volvo (m3)")
-
-    st.pyplot(plt)
+    st.title("🥅 Análisis Pórtico")
+    #st.header("Este Análisis contempla el estudio desde el  2024-07-24 al 2024-07-31")
 
 
 
+    st.sidebar.title('Cargar archivo')
+    uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
+    if uploaded_file is not None:
+        # Leer el archivo Excel
+        df = pd.read_excel(uploaded_file)
+    #df=pd.read_csv('https://raw.githubusercontent.com/MatiasCatalanR/Talabre/main/BD%20PORTICO%2030-07.csv', sep=';')
+        df
+    # Crear el diccionario de mapeo
+        mapping = {
+            'P27': 'Volvo', 'F92': 'Volvo', 'S79': 'Volvo', 'F31': 'Volvo', 'W58': 'Volvo', 'F33': 'Volvo', 'X32': 'Volvo', 'F94': 'Volvo', 'F93': 'Volvo', 'F51': 'Volvo', 'W59': 'Volvo', 'K46': 'Volvo', 'K47': 'Volvo', 'Z92': 'Volvo', 'L13': 'Volvo', 'V45': 'Volvo', 'F28': 'Volvo', 'S56': 'Volvo', 'K28': 'Volvo', 'H92': 'Volvo', 'B34': 'Volvo', 'K29': 'Volvo', 'F29': 'Volvo', 'V43': 'Volvo', 'K48': 'Volvo',
+            'T53': 'Mercedes', 'S36': 'Mercedes', 'F88': 'Mercedes', 'T54': 'Mercedes', 'W10': 'Mercedes', 'H32': 'Mercedes', 'T51': 'Mercedes', 'R84': 'Mercedes', 'T43': 'Mercedes', 'V82': 'Mercedes', 'X15': 'Mercedes', 'Z82': 'Mercedes', 'W78': 'Mercedes', 'J63': 'Mercedes', 'L80': 'Mercedes', 'W12': 'Mercedes', 'L31': 'Mercedes', 'L78': 'Mercedes', 'L67': 'Mercedes', 'L79': 'Mercedes', 'J54': 'Mercedes', 'L77': 'Mercedes', 'L75': 'Mercedes', 'H30': 'Mercedes', 'TT43': 'Mercedes'
+        }
 
-    df["Hora"] = pd.to_datetime(df["Hora"])
-    df["Fecha"] = df["Hora"].dt.date
+        # Crear la nueva columna "Modelo" usando el diccionario de mapeo
+        df['Modelo'] = df['Camion ID'].map(mapping)
+        df
+        df=df[df["Total (m3)"]>0]
+        df=df[df["Total (m3)"]>13]
+
+        df_mercedes=df[df["Modelo"]=="Mercedes"]
+        df_volvo=df[df["Modelo"]=="Volvo"]
 
 
-    promedio_diario = df.groupby("Fecha")["Total (m3)"].mean()
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(15, 5))
+
+        plt.subplot(1, 3, 1)
+        sns.histplot(df["Total (m3)"], color='#76151f')
+        plt.xticks(range(int(min(df["Total (m3)"])), int(max(df["Total (m3)"])) + 1))
+        plt.text(df["Total (m3)"].mean(), -55, f"Promedio: {df['Total (m3)'].mean():.2f}", ha='center')
+        plt.tight_layout()
+        plt.title("Histograma Carga Total Camiones (m3)")
+
+        plt.subplot(1, 3, 2)
+        sns.histplot(df_mercedes["Total (m3)"], color='#374752')
+        plt.xticks(range(int(min(df_mercedes["Total (m3)"])), int(max(df_mercedes["Total (m3)"])) + 1))
+        plt.text(df_mercedes["Total (m3)"].mean(), -29, f"Promedio: {df_mercedes['Total (m3)'].mean():.2f}", ha='center')
+        plt.tight_layout()
+        plt.title("Histograma Carga Camión Mercedes (m3)")
+
+        plt.subplot(1, 3, 3)
+        sns.histplot(df_volvo["Total (m3)"], color='#c8b499')
+        plt.xticks(range(int(min(df_volvo["Total (m3)"])), int(max(df_volvo["Total (m3)"])) + 1))
+        plt.text(df_volvo["Total (m3)"].mean(), -26, f"Promedio: {df_volvo['Total (m3)'].mean():.2f}", ha='center')
+        plt.tight_layout()
+        plt.title("Histograma Carga Camión Volvo (m3)")
+
+        st.pyplot(plt)
 
 
-    fig = px.line(promedio_diario, x=promedio_diario.index, y="Total (m3)", title="Promedio Diario")
-    fig.update_layout(width=900, height=500)
 
-    st.plotly_chart(fig, use_container_width=True)
+
+        # Convertir la columna 'Hora' a datetime y extraer la fecha
+        df["Hora"] = pd.to_datetime(df["Hora"])
+        df["Fecha"] = df["Hora"].dt.date
+
+        # Calcular el promedio diario
+        promedio_diario = df.groupby("Fecha")["Total (m3)"].mean().round(1)
+
+        # Crear el gráfico de líneas para el promedio diario
+        fig = px.line(promedio_diario, x=promedio_diario.index, y=promedio_diario.values, title="Promedio Diario de m³ Transportados por Viaje y Fecha")
+        fig.update_layout(width=900, height=600)
+        fig.update_yaxes(showgrid=True, gridwidth=1, gridcolor='LightGray', nticks=10)
+
+        fig.update_xaxes(type='date', tickformat='%Y-%m-%d', dtick="D1")  # Configurar el formato del eje x y el intervalo de ticks
+        fig.update_yaxes(title_text='Metros Cúbicos')  # Configurar el título del eje y
+        fig.update_traces(line_color='#76151f')
+        fig.update_layout(
+            xaxis_title_font=dict(size=20),  # Tamaño del título del eje x
+            yaxis_title_font=dict(size=20),  # Tamaño del título del eje y
+            xaxis=dict(tickfont=dict(size=18)),  # Tamaño de los valores del eje x
+            yaxis=dict(tickfont=dict(size=18))   # Tamaño de los valores del eje y
+        )
+        fig.update_traces(line=dict(width=4))  # Ajusta el valor de 'width' según sea necesario
+
+
+        col1, col2=st.columns(2)
+
+        # Mostrar el gráfico
+        #with col1:
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Calcular la suma diaria
+        suma_diaria = df.groupby("Fecha")["Total (m3)"].sum()
+
+        # Crear el gráfico de líneas para la suma diaria
+        fig2 = px.line(suma_diaria, x=suma_diaria.index, y=suma_diaria.values, title="Total de Metros Cúbicos Medidos en Pórtico por Fecha")
+        fig2.update_layout(width=900, height=500)
+        fig2.update_xaxes(type='date', tickformat='%Y-%m-%d', dtick="D1")  # Configurar el formato del eje x y el intervalo de ticks
+        fig2.update_yaxes(title_text='Total (m3)')  # Configurar el título del eje y
+        fig2.update_layout(
+            xaxis_title_font=dict(size=20),  # Tamaño del título del eje x
+            yaxis_title_font=dict(size=20),  # Tamaño del título del eje y
+            xaxis=dict(tickfont=dict(size=18)),  # Tamaño de los valores del eje x
+            yaxis=dict(tickfont=dict(size=18))   # Tamaño de los valores del eje y
+        )
+        fig2.update_traces(line=dict(width=4))
+        fig2.update_traces(line_color='#374752')
+
+        st.plotly_chart(fig2, use_container_width=True)
+        # Agrupar el DataFrame por la columna 'Fecha' y contar la cantidad de entradas
+        cantidad_ciclos = df.groupby("Fecha")["Total (m3)"].count()
+
+        # Crear el gráfico de líneas
+        fig2 = px.line(cantidad_ciclos, x=cantidad_ciclos.index, y=cantidad_ciclos.values, title="Ciclos por Fecha Pórtico")
+        fig2.update_layout(width=900, height=500)
+        fig2.update_xaxes(type='date', tickformat='%Y-%m-%d', dtick="D1")  # Configurar el formato del eje x y el intervalo de ticks
+        fig2.update_yaxes(title_text='Cantidad de Ciclos')  # Configurar el título del eje y
+        fig2.update_traces(line_color='#374752')
+        fig2.update_layout(
+            xaxis_title_font=dict(size=20),  # Tamaño del título del eje x
+            yaxis_title_font=dict(size=20),  # Tamaño del título del eje y
+            xaxis=dict(tickfont=dict(size=18)),  # Tamaño de los valores del eje x
+            yaxis=dict(tickfont=dict(size=18))   # Tamaño de los valores del eje y
+        )
+        fig2.update_traces(line=dict(width=4)) 
+
+        # Mostrar el gráfico en Streamlit
+        st.plotly_chart(fig2, use_container_width=True)
+        # Crear el gráfico de barras para la suma diaria
+        # Datos proporcionados
+        suma_diaria
+        data = {
+            'Fecha': ['2024-08-14', '2024-08-15', '2024-08-16', '2024-08-17', '2024-08-18', '2024-08-19'],
+            'Total (m3)': [9905.9, 11757.7, 10425.6, 12769.4, 11586.8, 5338.3]
+        }
+
+        # Crear el DataFrame
+        suma_diaria = pd.DataFrame(data)
+
+        # Convertir la columna 'Fecha' a tipo datetime y establecerla como índice
+        suma_diaria['Fecha'] = pd.to_datetime(suma_diaria['Fecha'])
+        suma_diaria.set_index('Fecha', inplace=True)
+
+        # Crear el gráfico de barras
+        fig2 = px.bar(suma_diaria, x=suma_diaria.index, y='Total (m3)', title="Total de Metros Cúbicos Medidos en Pórtico por Fecha")
+        fig2.update_layout(width=900, height=500)
+        fig2.update_xaxes(type='date', tickformat='%Y-%m-%d', dtick="D1")  # Configurar el formato del eje x y el intervalo de ticks
+        fig2.update_yaxes(title_text='Total (m3)')  # Configurar el título del eje y
+        fig2.update_traces(marker_color='#374752')  # Cambiar el color de las barras
+        fig2.update_layout(
+            xaxis_title_font=dict(size=20),  # Tamaño del título del eje x
+            yaxis_title_font=dict(size=20),  # Tamaño del título del eje y
+            xaxis=dict(tickfont=dict(size=18)),  # Tamaño de los valores del eje x
+            yaxis=dict(tickfont=dict(size=18))   # Tamaño de los valores del eje y
+        )
+        # Mostrar el gráfico en Streamlit
+        st.plotly_chart(fig2, use_container_width=True)
+        patentes=df['Camion ID'].nunique()
+        patentes
+
 
 if funcion== "Análisis Excel Avance IX Etapa":
     st.title("📈 Análisis Avance IX Etapa")
