@@ -64,7 +64,7 @@ image_bytes = buf.getvalue()
 st.sidebar.markdown("<h1 style='text-align: center; color: white;'>Unidad de Control Operativo</h1>", unsafe_allow_html=True)
 st.sidebar.markdown("<hr style='border:2.5px solid white'> </hr>", unsafe_allow_html=True)
 
-funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","En Desarrollo 1","En Desarrollo 2","Transgresiones de Velocidad","Equipos Obras Anexas","Pórtico"])
+funcion=st.sidebar.selectbox("Seleccione una Función",["Análisis Excel Avance IX Etapa","Reporte Inicio-Término Turno","En Desarrollo 1","En Desarrollo 2","Transgresiones de Velocidad","Equipos Obras Anexas","Pórtico","Tiempo en Geocercas"])
 
 url_despacho='https://icons8.com/icon/21183/in-transit'
 
@@ -2291,3 +2291,151 @@ if funcion== "Análisis Excel Avance IX Etapa":
     #st.write(df_limpieza)
     #st.markdown("**Media Movil**")
     #st.write(df_limpieza_media_movil)
+if funcion=="Tiempo en Geocercas":
+    fig = go.Figure()
+    figw = go.Figure()
+
+    color_boxplot = '#6e4d48'
+    color_promedio = 'black'
+    font_size_promedio = 16
+    st.sidebar.title('Cargar archivo')
+    uploaded_file = st.sidebar.file_uploader("Elige un archivo CSV o XLSX", type=['csv', 'xlsx'])
+    df = pd.read_excel(uploaded_file)
+    #df=df[df['duración_permanencia_geocerca__min_']<40]
+    #df=df[df['duración_permanencia_geocerca__min_']>1]
+    color_boxplot='#f4a700'
+    for lugar_descarga in sorted(df['geocerca'].unique(), reverse=True):
+
+        data = df[df['geocerca'] == lugar_descarga]['duración_permanencia_geocerca__min_']
+        fig.add_trace(go.Box(y=data, name=lugar_descarga, marker_color=color_boxplot, showlegend=False))
+
+        # Agregar anotaciones
+        media = round(data.median(), 1)
+        fig.add_annotation(x=lugar_descarga, y=media+5, text=str(media), showarrow=False, font=dict(color=color_promedio, size=font_size_promedio))
+
+
+    df=df[df['duración_permanencia_geocerca__min_']<40]
+    #df=df[df['duración_permanencia_geocerca__min_']>3]
+
+
+    # Filtrar los datos
+    df_plataforma_5 = df[(df['duración_permanencia_geocerca__min_'] > 5) & (df['geocerca'] == 'Plataforma 5')]
+    df_no_plataforma_5 = df[(df['duración_permanencia_geocerca__min_'] > 3) & (df['geocerca'] != 'Plataforma 5')]
+    df_final = pd.concat([df_plataforma_5, df_no_plataforma_5])
+
+    color_boxplot = '#374752'
+    color_promedio = '#201F1F'  # Color para la línea del promedio
+    font_size_promedio = 16
+
+    figw = go.Figure()
+
+    # Obtener la lista de geocercas ordenadas
+    geocercas = sorted(df_final['geocerca'].unique(), reverse=True)
+
+    for i, lugar_descarga in enumerate(geocercas):
+        data = df_final[df_final['geocerca'] == lugar_descarga]['duración_permanencia_geocerca__min_']
+        
+        # Agregar el boxplot
+        figw.add_trace(go.Box(y=data, name=lugar_descarga, marker_color=color_boxplot, showlegend=False))
+        
+        # Calcular el promedio
+        promedio = round(data.mean(), 1)
+        
+        # Agregar línea horizontal para el promedio
+        figw.add_shape(
+            type="line",
+            x0=i - 0.4,  # Ajustar la posición x0
+            y0=promedio,
+            x1=i + 0.4,  # Ajustar la posición x1
+            y1=promedio,
+            line=dict(color=color_promedio, width=3, dash="dash"),  # Aumentar el grosor de la línea
+            xref="x",
+            yref="y"
+        )
+
+        # Agregar anotaciones para el promedio
+        figw.add_annotation(x=i, y=promedio + 1, text=str(promedio), showarrow=False, font=dict(color=color_promedio, size=font_size_promedio))
+        
+        # Agregar anotación para la cantidad de datos
+        cantidad_datos = len(data)
+        figw.add_annotation(x=i, y=min(data) - 2, text=f'{cantidad_datos} Registros', showarrow=False, font=dict(size=15))
+
+    # Configuración del layout
+    figw.update_layout(title='Box Plot Tiempo en Geocerca por Frentes',
+                    xaxis_title='Frente',
+                    yaxis_title='Permanencia en Geocerca (min)',
+                    width=600,
+                    height=600)
+
+    # Agregar línea invisible para la leyenda
+    figw.add_trace(go.Scatter(
+        x=[None], y=[None],
+        mode='lines',
+        line=dict(color=color_promedio, width=3, dash='dash'),
+        showlegend=True,
+        name='Promedio'
+    ))
+
+    figw.update_layout(
+        xaxis_title_font=dict(size=20),
+        yaxis_title_font=dict(size=20),
+        xaxis=dict(tickfont=dict(size=18)),
+        yaxis=dict(tickfont=dict(size=18)),
+        legend=dict(font=dict(size=16))
+
+    )
+
+    # Mostrar el gráfico
+    st.plotly_chart(figw, use_container_width=True)
+
+
+
+
+    # Supongamos que df_final es tu DataFrame que contiene las columnas 'fecha_inicio', 'patente' y 'geocerca'
+
+    # Asegúrate de que 'fecha_inicio' sea de tipo datetime
+    df_final['fecha_inicio'] = pd.to_datetime(df_final['fecha_inicio']).dt.date
+
+    # Agrupar por fecha y geocerca, contando las patentes únicas
+    df_agrupado = df_final.groupby(['fecha_inicio', 'geocerca'])['patente'].nunique().reset_index()
+    color_mapping = {
+        "Muro Norte": "#209eb0",
+        "Muro Sur": "#76151f",
+        "Muro Oeste": "#bb5726",
+        "Pretil Principal": "#209eb0",
+        "Pretil 6.1-2": "#c8b499",
+        "Pretil 2A-2B": "#374752",
+        "Pretil Principal T1": "#c8b499",
+        "Plataforma 1":"#f4a700",
+        "Plataforma 5":"#004c4e"
+    }
+
+    # Crear el gráfico de barras
+    fig = px.bar(df_agrupado, 
+                x='fecha_inicio', 
+                y='patente', 
+                color='geocerca', 
+                barmode='group',
+                title='Patentes Únicas por Geocerca y Fecha',
+                labels={'patente': 'Cantidad de Patentes Únicas', 'fecha_inicio': 'Fecha'},
+                color_discrete_map=color_mapping)
+
+    # Personalizar el diseño
+    fig.update_layout(xaxis_title='Fecha',
+                    yaxis_title='Cantidad de Patentes Únicas',
+                    xaxis_tickformat='%Y-%m-%d',  # Formato de fecha
+                    width=800,
+                    height=600)
+    fig.update_layout(
+        xaxis_title_font=dict(size=20),  # Tamaño del título del eje x
+        yaxis_title_font=dict(size=20),  # Tamaño del título del eje y
+        xaxis=dict(tickfont=dict(size=18)),  # Tamaño de los valores del eje x
+        yaxis=dict(tickfont=dict(size=18)),
+        legend=dict(font=dict(size=16))
+   # Tamaño de los valores del eje y
+    )
+
+    # Mostrar el gráfico
+    st.plotly_chart(fig, use_container_width=True)
+        # Definir un mapeo de colores para cada lugar_descarga
+
