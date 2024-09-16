@@ -2315,7 +2315,7 @@ if funcion=="Tiempo en Geocercas":
 
 
     df = df[~(df['geocerca'] == 'Parqueo Geocerca') | (df['duración_permanencia_geocerca__min_'] < 40)]
-
+    df=df[df['duración_permanencia_geocerca__min_']<40]
     #df=df[df['duración_permanencia_geocerca__min_']>3]
 
 
