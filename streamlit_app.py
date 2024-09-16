@@ -2314,7 +2314,8 @@ if funcion=="Tiempo en Geocercas":
         fig.add_annotation(x=lugar_descarga, y=media+5, text=str(media), showarrow=False, font=dict(color=color_promedio, size=font_size_promedio))
 
 
-    df=df[df['duración_permanencia_geocerca__min_']<40]
+    if (df['geocerca'] != 'Parqueo Geocerca').any():
+        df = df[df['duración_permanencia_geocerca__min_'] < 40]
     #df=df[df['duración_permanencia_geocerca__min_']>3]
 
 
