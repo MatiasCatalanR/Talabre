@@ -2355,7 +2355,7 @@ if funcion=="Tiempo en Geocercas":
         )
 
         # Agregar anotaciones para el promedio
-        figw.add_annotation(x=i, y=promedio + 1, text=str(promedio), showarrow=False, font=dict(color=color_promedio, size=font_size_promedio))
+        figw.add_annotation(x=i, y=promedio + 2, text=str(promedio), showarrow=False, font=dict(color=color_promedio, size=font_size_promedio))
         
         # Agregar anotación para la cantidad de datos
         cantidad_datos = len(data)
