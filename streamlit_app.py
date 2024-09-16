@@ -2326,7 +2326,7 @@ if funcion=="Tiempo en Geocercas":
 
     color_boxplot = '#374752'
     color_promedio = '#201F1F'  # Color para la línea del promedio
-    font_size_promedio = 16
+    font_size_promedio = 18
 
     figw = go.Figure()
 
