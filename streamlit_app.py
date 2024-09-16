@@ -2432,7 +2432,7 @@ if funcion=="Tiempo en Geocercas":
         yaxis_title_font=dict(size=20),  # Tamaño del título del eje y
         xaxis=dict(tickfont=dict(size=18)),  # Tamaño de los valores del eje x
         yaxis=dict(tickfont=dict(size=18)),
-        legend=dict(font=dict(size=16))
+        legend=dict(font=dict(size=18))
    # Tamaño de los valores del eje y
     )
 
