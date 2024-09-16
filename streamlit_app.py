@@ -2359,7 +2359,7 @@ if funcion=="Tiempo en Geocercas":
         
         # Agregar anotación para la cantidad de datos
         cantidad_datos = len(data)
-        figw.add_annotation(x=i, y=min(data) - 2, text=f'{cantidad_datos} Registros', showarrow=False, font=dict(size=15))
+        figw.add_annotation(x=i, y=min(data) - 2, text=f'{cantidad_datos} Registros', showarrow=False, font=dict(size=18))
 
     # Configuración del layout
     figw.update_layout(title='Box Plot Tiempo en Geocerca por Frentes',
