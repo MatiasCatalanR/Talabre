@@ -1676,6 +1676,60 @@ if funcion== "En Desarrollo 1":
 
     fig1.update_layout(width=900, height=500)
     st.plotly_chart(fig1, use_container_width=True)
+    # Convertir la columna de fechas a tipo datetime
+    data["Fecha"] = pd.to_datetime(data["Fecha"])
+    data = data[data["Fecha"] <= fechas_ayer]
+    data_total = data[data['Seccion'] == 'Total']
+    data = data[data['Seccion'] != 'Total']
+    
+    df_total = df_limpieza[df_limpieza["Secciones"] == "Total"]
+    
+    # PRUEBA
+    valores = df_total[df_total["Secciones"] == seccion].iloc[:, 2:-1]
+    
+    # Convertir las fechas a formato datetime
+    fechas = valores.columns  # Las fechas ya están en el formato correcto
+    
+    # Crear un DataFrame con las fechas, valores y sección
+    temp_df = pd.DataFrame({
+        "Fecha": fechas,
+        "Metros Cúbicos Compactados": valores.values[0],
+        "Seccion": seccion
+    })
+    
+    # Agregar el DataFrame temporal al DataFrame principal
+    data_total = temp_df
+    data_total["Fecha"] = pd.to_datetime(data_total["Fecha"])
+    data_total = data_total[data_total["Fecha"] <= fechas_ayer]
+    
+    # Determinar el color de los puntos en el scatter
+    data_total['Color'] = data_total['Fecha'].dt.dayofweek.apply(lambda x: 'red' if x >= 4 else 'black')
+    
+    # Crear el gráfico de barras
+    fig = px.bar(data, x="Fecha", y="Metros Cúbicos Compactados", color="Seccion", 
+                 title="Rellenos Compactados Medias Móviles 10 días Apiladas", 
+                 barmode="stack", color_discrete_sequence=["#f4a700", "#374752", "#c8b499", "#bb5726", "#76151f"])
+    
+    # Crear el trace adicional utilizando go.Scatter() y asignarle un nombre para la leyenda
+    scatter_trace = go.Scatter(
+        x=data_total["Fecha"],
+        y=data_total["Metros Cúbicos Compactados"],
+        mode="markers",
+        marker=dict(
+            symbol="x",  # Cambia la forma de los puntos a 'x'
+            size=5,  # Cambia el tamaño de los puntos
+            color=data_total['Color']  # Asigna el color basado en el día de la semana
+        ),
+        name="Relleno Total Diario"
+    )
+    
+    # Agregar el trace adicional al gráfico de barras
+    fig.add_trace(scatter_trace)
+    
+    fig.update_layout(width=900, height=500)
+    
+    # Mostrar el gráfico
+    st.plotly_chart(fig, use_container_width=True)
     col1, col2,col3=st.columns(3)
     suma_actual=int(suma_total_historica)
     suma_diciembre=int(suma_actual)+int(suma_proyectado)
